@@ -1,0 +1,62 @@
+{
+  "name": "stream-akaritakai-net-view",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/build.js dev",
+    "prod": "node scripts/build.js prod"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.12.0",
+    "hls.js": "^0.13.2",
+    "moment": "^2.24.0",
+    "simplebar-vue": "^1.4.0",
+    "video.js": "^7.8.1",
+    "vue": "^2.6.11",
+    "vuex": "^3.2.0",
+    "vuex-persistedstate": "^3.0.1",
+    "vuex-shared-mutations": "^1.0.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
+    "babel-loader": "^8.0.6",
+    "chalk": "^3.0.0",
+    "copy-webpack-plugin": "^5.1.1",
+    "css-loader": "^3.4.2",
+    "favicons-webpack-plugin": "^2.1.0",
+    "file-loader": "^6.0.0",
+    "html-webpack-plugin": "^4.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "moment-locales-webpack-plugin": "^1.2.0",
+    "node-sass": "^4.13.1",
+    "optimize-css-assets-webpack-plugin": "^5.0.3",
+    "ora": "^4.0.3",
+    "rimraf": "^3.0.2",
+    "sass-loader": "^8.0.0",
+    "terser-webpack-plugin": "^2.3.4",
+    "vue-loader": "^15.6.4",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.6.11",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
+  },
+  "engines": {
+    "node": ">= 12.16.2",
+    "npm": ">= 6.14.4"
+  },
+  "browserslist": [
+    "last 1 Android version",
+    "last 1 Chrome version",
+    "last 1 ChromeAndroid version",
+    "last 1 Edge version",
+    "last 1 Firefox version",
+    "last 1 FirefoxAndroid version",
+    "last 1 iOS version",
+    "last 1 Safari version"
+  ]
+}

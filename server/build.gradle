@@ -1,0 +1,42 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+wrapper {
+    gradleVersion = "6.2.2"
+    distributionType = Wrapper.DistributionType.ALL
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor "org.projectlombok:lombok:1.18.12"
+    compileOnly "org.projectlombok:lombok:1.18.12"
+    implementation "commons-io:commons-io:2.6"
+    implementation "com.amazonaws:aws-java-sdk-s3:1.11.762"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3"
+    implementation "com.google.guava:guava:28.2-jre"
+    implementation "io.lindstrom:m3u8-parser:0.9"
+    implementation "io.vertx:vertx-core:3.8.5"
+    implementation "io.vertx:vertx-web:3.8.5"
+    implementation "io.vertx:vertx-web-client:3.8.5"
+    implementation "org.apache.commons:commons-lang3:3.10"
+    implementation "org.slf4j:slf4j-api:1.7.30"
+
+    runtime "org.apache.logging.log4j:log4j-core:2.13.1"
+    runtime "org.apache.logging.log4j:log4j-1.2-api:2.13.1"
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.13.1"
+
+}
+
+application {
+    mainClassName = "net.akaritakai.stream.Main"
+}
