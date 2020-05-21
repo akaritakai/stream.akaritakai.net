@@ -33,22 +33,27 @@
       }
     },
     mounted() {
-      const store = this.$store;
-      function establishListener() {
+      this.establishListener();
+    },
+    methods: {
+      establishListener() {
         let socket;
         if (process.env.NODE_ENV === "development") {
           socket = new WebSocket("ws://localhost/stream/status");
         } else {
           socket = new WebSocket("wss://stream.akaritakai.net/stream/status");
         }
+        const stream = this;
         socket.onmessage = function(event) {
-          store.dispatch('stream/updateState', JSON.parse(event.data));
+          stream.$store.dispatch('stream/updateState', JSON.parse(event.data));
         };
+        socket.onerror = function() {
+          socket.close();
+        }
         socket.onclose = function() {
-          setTimeout(establishListener, 100);
+          setTimeout(this.establishListener, 100);
         };
       }
-      establishListener();
     }
   }
 </script>

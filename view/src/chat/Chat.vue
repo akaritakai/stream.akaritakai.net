@@ -43,47 +43,57 @@
         deep: true,
         handler() {
           if (this.socket !== null && this.connected === true && this.sendQueue.length > 0) {
-            this.socket.send(JSON.stringify({
-              requestType: "send",
-              messageType: "TEXT",
-              nickname: this.nick,
-              message: this.sendQueue[0]
-            }));
-            this.$store.dispatch('chat/messageSent');
+            try {
+              this.socket.send(JSON.stringify({
+                requestType: "send",
+                messageType: "TEXT",
+                nickname: this.nick,
+                message: this.sendQueue[0]
+              }));
+              this.$store.dispatch('chat/messageSent');
+            } catch (_) {
+              // The socket will be closed and the handler will pick this up again
+            }
           }
         }
       }
     },
     mounted() {
-      const chat = this;
-      function establishListener() {
-        if (process.env.NODE_ENV === "development") {
-          chat.socket = new WebSocket("ws://localhost/chat");
-        } else {
-          chat.socket = new WebSocket("wss://stream.akaritakai.net/chat");
-        }
-        chat.socket.onmessage = function(event) {
-          const response = JSON.parse(event.data);
-          if (response.responseType === "message") {
-            chat.$store.dispatch('chat/onMessage', response);
-          } else if (response.responseType === "status") {
-            chat.$store.dispatch('chat/onStatus', response);
-          }
-        };
-        chat.socket.onopen = function() {
-          chat.connected = true;
-          chat.socket.send(JSON.stringify({requestType: "join"}));
-        };
-        chat.socket.onclose = function() {
-          chat.connected = false;
-          setTimeout(establishListener, 100);
-        };
-      }
-      establishListener();
+      this.establishListener();
     },
     methods: {
       openChat() {
         this.$store.dispatch('chat/openChat');
+      },
+      establishListener() {
+        if (this.socket === null) {
+          if (process.env.NODE_ENV === "development") {
+            this.socket = new WebSocket("ws://localhost/chat");
+          } else {
+            this.socket = new WebSocket("wss://stream.akaritakai.net/chat");
+          }
+          const chat = this;
+          this.socket.onmessage = function(event) {
+            const response = JSON.parse(event.data);
+            if (response.responseType === "message") {
+              chat.$store.dispatch('chat/onMessage', response);
+            } else if (response.responseType === "status") {
+              chat.$store.dispatch('chat/onStatus', response);
+            }
+          };
+          this.socket.onopen = function() {
+            chat.connected = true;
+            chat.socket.send(JSON.stringify({requestType: "join"}));
+          };
+          this.socket.onerror = function() {
+            chat.socket.close();
+          };
+          this.socket.onclose = function() {
+            chat.connected = false;
+            chat.socket = null;
+            setTimeout(chat.establishListener, 100);
+          };
+        }
       }
     }
   }
