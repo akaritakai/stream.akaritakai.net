@@ -18,7 +18,7 @@
   // For these reasons and more, we use the better supported hls.js library. However, we still want video.js's skinning
   // and event listening functions. So, we make an effort to try to bind the libraries together by adding hls.js as a
   // source handler in video.js with some effort.
-  const Hls = require('hls.js');
+  import Hls from '../node_modules/hls.js/dist/hls.light.js'; // we don't need subs or alternate audio tracks
   function HlsJsHandler(source, tech) {
     const el = tech.el();
     let duration = null;
