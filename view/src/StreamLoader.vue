@@ -15,6 +15,7 @@
 
 <script>
   import {mapState} from "vuex";
+  import videojs from 'video.js/core'; // we only need the core library because we are not including http-streaming
 
   export default {
     name: 'stream-loader',
@@ -29,13 +30,8 @@
             if (this.now - this.endTime > 0) {
               return "The stream has ended"; // The stream has ended but we haven't gotten the OFFLINE message yet
             } else {
-              // Stream is about to start
-              const startIn = Math.ceil((this.startTime - this.now) / 1000);
-              if (startIn === 1) {
-                return "The stream will start in " + startIn + " second";
-              } else {
-                return "The stream will start in " + startIn + " seconds";
-              }
+              const timeUntil = (this.startTime - this.now) / 1000;
+              return "The stream will start in " + videojs.formatTime(timeUntil, 1);
             }
           }
         }
