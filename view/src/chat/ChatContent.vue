@@ -197,7 +197,7 @@
     justify-content: normal;
     line-height: 20px;
     min-height: 100%;
-    min-width: 100%;
+    width: 320px;
     overflow-x: hidden;
     overflow-y: scroll;
     padding: 0;
