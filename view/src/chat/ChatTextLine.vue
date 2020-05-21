@@ -2,7 +2,16 @@
   <div class="chat-text-line">
     <span class="chat-line-nick" v-bind:style="{color: selectedNickColor}">{{ nick }}</span>
     <span>: </span>
-    <span class="chat-line-text-message">{{ message }}</span>
+    <template v-for="part in messageParts">
+      <template v-if="part.type === 'link'">
+        <span>
+          <a class="chat-text-line-link" v-bind:href="part.content">{{ part.content }}</a>
+        </span>
+      </template>
+      <template v-if="part.type === 'plaintext'">
+        <span>{{ part.content }}</span>
+      </template>
+    </template>
   </div>
 </template>
 
@@ -50,6 +59,38 @@
         return hash;
       }
       this.selectedNickColor = this.nickColors[Math.abs(hashCode(this.nick)) % this.nickColors.length];
+    },
+    computed: {
+      messageParts() {
+        const parts = [];
+
+        // Split the message into parts
+        const tokens = this.message.split(/(\s+)/);
+        tokens.forEach(token => {
+          let validUrl = false;
+          if (token.startsWith("http://")) {
+            try {
+              const url = new URL(token);
+              if (url.protocol === 'http:' || url.protocol === 'https:') {
+                validUrl = true;
+                parts.push({
+                  type: "link",
+                  content: token
+                });
+              }
+            } catch (_) {
+            }
+          }
+          if (!validUrl) {
+            parts.push({
+              type: "plaintext",
+              content: token
+            })
+          }
+        });
+
+        return parts;
+      }
     }
   }
 </script>
@@ -67,10 +108,20 @@
       overflow-wrap: break-word;
       padding: 0;
       vertical-align: baseline;
+      white-space: pre-wrap;
       &.chat-line-nick {
         font-weight: 700;
         word-break: break-all;
       }
+    }
+  }
+
+  a.chat-text-line-link {
+    &:link {
+      color: darkgoldenrod;
+    }
+    &:visited {
+      color: olive;
     }
   }
 
