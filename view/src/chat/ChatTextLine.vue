@@ -68,7 +68,7 @@
         const tokens = this.message.split(/(\s+)/);
         tokens.forEach(token => {
           let validUrl = false;
-          if (token.startsWith("http://")) {
+          if (token.startsWith("http://") || token.startsWith("https://")) {
             try {
               const url = new URL(token);
               if (url.protocol === 'http:' || url.protocol === 'https:') {
