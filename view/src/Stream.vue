@@ -51,7 +51,7 @@
           socket.close();
         }
         socket.onclose = function() {
-          setTimeout(this.establishListener, 100);
+          setTimeout(stream.establishListener, 100);
         };
       }
     }
