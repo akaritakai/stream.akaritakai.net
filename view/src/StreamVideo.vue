@@ -22,37 +22,8 @@
   function HlsJsHandler(source, tech) {
     const el = tech.el();
     let duration = null;
-    const hls = this.hls = new Hls();
-
-    function errorHandlerFactory() {
-      let recoverDecodingErrorDate = null;
-      let recoverAudioCodecErrorDate = null;
-
-      return function() {
-        const now = Date.now();
-        if (!recoverDecodingErrorDate || (now - recoverDecodingErrorDate) > 2000) {
-          recoverDecodingErrorDate = now;
-          hls.recoverMediaError();
-        } else if (!recoverAudioCodecErrorDate || (now - recoverAudioCodecErrorDate) > 2000) {
-          recoverAudioCodecErrorDate = now;
-          hls.swapAudioCodec();
-          hls.recoverMediaError();
-        } else {
-          console.error('Error loading media: File could not be played');
-        }
-      };
-    }
-
-    const hlsjsErrorHandler = errorHandlerFactory();
-    const videoTagErrorHandler = errorHandlerFactory();
-
-    el.addEventListener('error', function(e) {
-      const mediaError = e.currentTarget.error;
-      if (mediaError.code === mediaError.MEDIA_ERR_DECODE) {
-        videoTagErrorHandler();
-      } else {
-        console.error('Error loading media: File could not be played');
-      }
+    const hls = this.hls = new Hls({
+      startFragPrefetch: true
     });
 
     this.dispose = function() {
@@ -67,22 +38,6 @@
       duration = data.details.live ? Infinity : data.details.totalduration;
     });
 
-    hls.on(Hls.Events.ERROR, function(event, data) {
-      if (data.fatal) {
-        switch (data.type) {
-          case Hls.ErrorTypes.NETWORK_ERROR:
-            hls.startLoad();
-            break;
-          case Hls.ErrorTypes.MEDIA_ERROR:
-            hlsjsErrorHandler();
-            break;
-          default:
-            console.error('Error loading media: File could not be played');
-            break;
-        }
-      }
-    });
-
     Object.keys(Hls.Events).forEach(function(key) {
       const eventName = Hls.Events[key];
       hls.on(eventName, function(event, data) {
@@ -94,7 +49,8 @@
     hls.loadSource(source.src);
   }
 
-  const hlsJsSourceHandler = {
+  // Add the hls.js handler
+  videojs.getTech('Html5').registerSourceHandler({
     canHandleSource(source) {
       if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(source.type)) {
         return 'probably';
@@ -114,8 +70,7 @@
         return '';
       }
     }
-  };
-  videojs.getTech('Html5').registerSourceHandler(hlsJsSourceHandler, 0);
+  }, 0);
 
   export default {
     name: 'stream-video',
@@ -215,6 +170,13 @@
         })
       });
 
+      // Recover any errors that might occur
+      this.player.on('error', () => {
+        const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
+        hls.recoverMediaError();
+        this.playStream();
+      });
+
       // Load the stream
       this.player.src({
         "type": "application/x-mpegURL",
@@ -223,20 +185,7 @@
       this.player.load();
 
       // Start the steam and seek to the appropriate location
-      this.player.play().then(_ => {
-        this.$store.dispatch('stream/updateMutedInfo', {
-          muted: false
-        });
-        this.seekStream();
-      }).catch(_ => {
-        this.player.muted(true);
-        this.$store.dispatch('stream/updateMutedInfo', {
-          muted: true
-        });
-        this.player.play().then(_ => {
-          this.seekStream();
-        });
-      });
+      this.playStream();
     },
     beforeDestroy() {
       // Stream is paused/stopped/not started yet, and our content is about to be disposed
@@ -254,6 +203,22 @@
       });
     },
     methods: {
+      playStream() {
+        this.player.play().then(_ => {
+          this.$store.dispatch('stream/updateMutedInfo', {
+            muted: this.player.muted()
+          });
+          this.seekStream();
+        }).catch(_ => {
+          this.player.muted(true);
+          this.$store.dispatch('stream/updateMutedInfo', {
+            muted: true
+          });
+          this.player.play().then(_ => {
+            this.seekStream();
+          });
+        });
+      },
       seekStream() {
         // Seeks the stream to the appropriate location
         // Note: We assume the stream has already started and is running
