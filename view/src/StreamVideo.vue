@@ -22,9 +22,7 @@
   function HlsJsHandler(source, tech) {
     const el = tech.el();
     let duration = null;
-    const hls = this.hls = new Hls({
-      startFragPrefetch: true
-    });
+    const hls = this.hls = new Hls();
 
     this.dispose = function() {
       hls.destroy();
