@@ -137,6 +137,9 @@
       height: 14px;
       padding-left: 5px;
       width: 14px;
+      &:hover {
+        color: rgb(145, 71, 255);
+      }
     }
   }
 

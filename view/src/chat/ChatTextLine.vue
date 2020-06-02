@@ -4,9 +4,7 @@
     <span>: </span>
     <template v-for="part in messageParts">
       <template v-if="part.type === 'link'">
-        <span>
-          <a class="chat-text-line-link" v-bind:href="part.content">{{ part.content }}</a>
-        </span>
+        <span><a class="chat-text-line-link" v-bind:href="part.content" rel="nofollow noopener noreferrer" target="_blank">{{ part.content }}</a></span>
       </template>
       <template v-if="part.type === 'plaintext'">
         <span>{{ part.content }}</span>

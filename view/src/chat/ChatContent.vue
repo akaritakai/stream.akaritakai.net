@@ -16,21 +16,28 @@
       </template>
       <template v-else>
         <!-- Nick needs to be set -->
-        <span class="instruction-message">Choose a nick to start chatting</span>
-        <template v-if="inputError">
+        <span class="text-align-center">Choose a nick to start chatting</span>
+        <span class="text-align-center">
           <!--suppress HtmlFormInputWithoutLabel -->
-          <input class="error" type="text" v-model="inputNick" maxlength="25" @keydown.enter.prevent="setNick" autofocus/>
-          <span class="error-message">{{ inputError }}</span>
-        </template>
-        <template v-else>
-          <!--suppress HtmlFormInputWithoutLabel -->
-          <input type="text" v-model="inputNick" maxlength="25" @keydown.enter.prevent="setNick" autofocus/>
-        </template>
+          <input v-bind:class="{'error': inputError}"
+                 type="text"
+                 v-model="inputNick"
+                 maxlength="25"
+                 @keydown.enter.prevent="setNick"
+                 autofocus/>
+          <svg class="icon" viewBox="0 0 512 512" @click="setNick">
+            <g><path d="M173.898 439.404l-166.4-166.4c-9.997-9.997-9.997-26.206 0-36.204l36.203-36.204c9.997-9.998
+                        26.207-9.998 36.204 0L192 312.69 432.095 72.596c9.997-9.997 26.207-9.997 36.204 0l36.203
+                        36.204c9.997 9.997 9.997 26.206 0 36.204l-294.4 294.401c-9.998 9.997-26.207
+                        9.997-36.204-.001z"/></g>
+          </svg>
+        </span>
+        <span v-if="inputError" class="error-message">{{ inputError }}</span>
       </template>
     </template>
     <template v-else>
       <!-- Chat disabled -->
-      <span class="instruction-message">Chat has been disabled</span>
+      <span class="text-align-center">Chat has been disabled</span>
     </template>
   </div>
 </template>
@@ -191,7 +198,17 @@
       text-align: center;
       white-space: pre-wrap;
     }
-    .instruction-message {
+    .icon {
+      color: rgb(239, 239, 241);
+      fill: currentColor;
+      height: 14px;
+      padding-left: 5px;
+      width: 14px;
+      &:hover {
+        color: rgb(145, 71, 255);
+      }
+    }
+    .text-align-center {
       text-align: center;
     }
   }
