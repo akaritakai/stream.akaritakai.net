@@ -1,6 +1,6 @@
 <template>
   <div id="stream-video">
-    <video ref="video" class="video-js"/>
+    <video ref="video" class="video-js" playsinline/>
   </div>
 </template>
 
@@ -47,28 +47,39 @@
     hls.loadSource(source.src);
   }
 
-  // Add the hls.js handler
-  videojs.getTech('Html5').registerSourceHandler({
-    canHandleSource(source) {
-      if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(source.type)) {
-        return 'probably';
-      } else if (/\.m3u8/i.test(source.src)) {
-        return 'maybe';
-      } else {
-        return '';
-      }
-    },
-    handleSource(source, tech) {
-      return new HlsJsHandler(source, tech);
-    },
-    canPlayType(type) {
-      if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(type)) {
-        return 'probably';
-      } else {
-        return '';
-      }
+  // Add the hls.js handler if the browser does not natively support HLS
+  const supportsNativeHls = (function() {
+    const video = document.createElement("video");
+    if (!videojs.getTech('Html5').isSupported()) {
+      return false;
     }
-  }, 0);
+    const isSupported = (/maybe|probably/i).test(video.canPlayType("application/x-mpegURL"));
+    video.remove();
+    return isSupported;
+  });
+  if (!supportsNativeHls()) {
+    videojs.getTech('Html5').registerSourceHandler({
+      canHandleSource(source) {
+        if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(source.type)) {
+          return 'probably';
+        } else if (/\.m3u8/i.test(source.src)) {
+          return 'maybe';
+        } else {
+          return '';
+        }
+      },
+      handleSource(source, tech) {
+        return new HlsJsHandler(source, tech);
+      },
+      canPlayType(type) {
+        if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(type)) {
+          return 'probably';
+        } else {
+          return '';
+        }
+      }
+    }, 0);
+  }
 
   export default {
     name: 'stream-video',
@@ -82,11 +93,23 @@
         'endTime',
         'seekTime',
         'live'
-      ])
+      ]),
+      ...mapState('time', ['now']),
+      ...mapState('prefs', ['volumePref'])
     },
     data() {
       return {
-        player: null
+        player: null,
+        started: false,
+        userControllingVolume: false
+      }
+    },
+    watch: {
+      // Guard against the video being paused
+      now() {
+        if (this.started && this.player.paused()) {
+          this.playStream();
+        }
       }
     },
     mounted() {
@@ -105,7 +128,6 @@
         }
       });
       this.player.fill(true);
-
 
       if (!this.live) {
         // Customize the control bar to our liking
@@ -147,38 +169,75 @@
 
       // Handle updating quality info
       this.player.on('progress', () => {
-        const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
-        const currentQuality = hls.levels[hls.currentLevel];
-        const quality = function() {
-          if (!currentQuality || !currentQuality.width || !currentQuality.height || !currentQuality.bitrate) {
-            return null;
-          } else {
-            const width = Math.round(currentQuality.width);
-            const height = Math.round(currentQuality.height);
-            const kbps = Math.round(currentQuality.bitrate / 1000);
-            return width + "x" + height + "@" + kbps + "k";
+        try {
+          const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
+          const currentQuality = hls.levels[hls.currentLevel];
+          const quality = function() {
+            if (!currentQuality || !currentQuality.width || !currentQuality.height || !currentQuality.bitrate) {
+              return null;
+            } else {
+              const width = Math.round(currentQuality.width);
+              const height = Math.round(currentQuality.height);
+              const kbps = Math.round(currentQuality.bitrate / 1000);
+              return width + "x" + height + "@" + kbps + "k";
+            }
           }
+          const bandwidth = function() {
+            return isNaN(hls.bandwidthEstimate) ? null : Math.round(hls.bandwidthEstimate);
+          }
+          this.$store.dispatch('stream/updateQualityInfo', {
+            quality: quality(),
+            bandwidth: bandwidth()
+          });
+        } catch (_) {
+          // No support for hls.js
         }
-        const bandwidth = function() {
-          return isNaN(hls.bandwidthEstimate) ? null : Math.round(hls.bandwidthEstimate);
-        }
-        this.$store.dispatch('stream/updateQualityInfo', {
-          quality: quality(),
-          bandwidth: bandwidth()
-        });
       });
       this.player.on('volumechange', () => {
         this.$store.dispatch('stream/updateMutedInfo', {
           muted: this.player.muted()
-        })
+        });
+      });
+
+      // Handle drifts during playback (also fixes race conditions for play + seek on Android)
+      if (!this.live) {
+        this.player.on('durationchange', () => {
+          // The stream can only be seeked if it is pre-recorded
+          const startTime = this.startTime; // the time the stream started
+          const seekTimeMs = this.seekTime; // where the stream was seeked to when the stream started
+          const now = new Date().getTime(); // the current time
+          const seekTime = ((now - startTime) + seekTimeMs) / 1000;
+          if (seekTime - this.player.currentTime() > 2) { // 2 second drift is too much
+            this.player.currentTime(seekTime);
+          }
+        });
+      }
+
+      // Handle iOS pausing the video when transitioning to/from fullscreen
+      this.player.on('fullscreenchange', () => {
+        console.log('full screen change occurred');
+        this.playStream();
       });
 
       // Recover any errors that might occur
       this.player.on('error', () => {
-        const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
-        hls.recoverMediaError();
-        this.playStream();
+        try {
+          const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
+          hls.recoverMediaError();
+          this.playStream();
+        } catch (_) {
+          this.playStream();
+        }
       });
+
+      // Load the user's desired volume and store any changes the user makes
+      this.player.volume(this.volumePref);
+      this.player.on('volumechange', () => {
+        if (this.userControllingVolume) {
+          this.$store.dispatch('prefs/setVolumePref', this.player.volume());
+        }
+      });
+      this.userControllingVolume = true;
 
       // Load the stream
       this.player.src({
@@ -211,16 +270,23 @@
           this.$store.dispatch('stream/updateMutedInfo', {
             muted: this.player.muted()
           });
-          this.seekStream();
+          this.onStreamPlaying();
         }).catch(_ => {
+          // Mute the player for the user so that autoplay can work
+          this.userControllingVolume = false;
           this.player.muted(true);
           this.$store.dispatch('stream/updateMutedInfo', {
             muted: true
           });
           this.player.play().then(_ => {
-            this.seekStream();
+            this.onStreamPlaying();
           });
         });
+      },
+      onStreamPlaying() {
+        this.seekStream();
+        this.userControllingVolume = true;
+        this.started = true;
       },
       seekStream() {
         // Seeks the stream to the appropriate location
@@ -264,5 +330,10 @@
   // Block touch event from pausing the stream
   .vjs-tech {
     pointer-events: none;
+  }
+
+  // Safari unnecessarily shows the subs button
+  .vjs-subs-caps-button {
+    display: none;
   }
 </style>

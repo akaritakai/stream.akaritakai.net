@@ -23,12 +23,14 @@
     data() {
       return {
         socket: null,
-        connected: false
+        connected: false,
+        width: document.getElementById("root").clientWidth
       }
     },
     computed: {
       ...mapState('nick', ['nick']),
       ...mapState('chat', ['opened', 'sendQueue']),
+      ...mapState('prefs', ['chatShownPref']),
       sendQueueState() { // watchable object to trigger changes to the list of queued messages
         return {
           socket: this.socket, // socket for sending messages
@@ -56,22 +58,48 @@
             }
           }
         }
+      },
+      width(newWidth, oldWidth) {
+        if (oldWidth >= 680 && newWidth < 680) {
+          // Hide chat as the viewport has gotten too small
+          this.$store.dispatch('chat/closeChat');
+        }
       }
     },
     mounted() {
       this.establishListener();
+
+      // Create initial chat window status
+      if (document.getElementById("root").clientWidth < 680) {
+        // Don't show the chat by default if the viewport is too small
+        this.$store.dispatch('chat/closeChat');
+      } else {
+        // Restore the user's preference
+        if (this.chatShownPref) {
+          this.$store.dispatch('chat/openChat');
+        } else {
+          this.$store.dispatch('chat/closeChat');
+        }
+      }
+
+      // Watch for resizes
+      this.$nextTick(() => {
+        window.addEventListener('resize', this.onResize);
+      });
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.onResize);
     },
     methods: {
       openChat() {
         this.$store.dispatch('chat/openChat');
+        this.$store.dispatch('prefs/setChatShownPref', true); // Mark that user wants chat shown
       },
       establishListener() {
         if (this.socket === null) {
-          if (process.env.NODE_ENV === "development") {
-            this.socket = new WebSocket("ws://localhost/chat");
-          } else {
-            this.socket = new WebSocket("wss://stream.akaritakai.net/chat");
-          }
+          const url = new URL('/chat', window.location.href);
+          url.protocol = url.protocol.replace('http', 'ws');
+          this.socket = new WebSocket(url.href);
           const chat = this;
           this.socket.onmessage = function(event) {
             const response = JSON.parse(event.data);
@@ -94,6 +122,9 @@
             setTimeout(chat.establishListener, 100);
           };
         }
+      },
+      onResize() {
+        this.width = document.getElementById("root").clientWidth;
       }
     }
   }

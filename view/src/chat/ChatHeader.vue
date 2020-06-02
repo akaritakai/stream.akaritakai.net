@@ -36,6 +36,7 @@
       },
       closeChat() {
         this.$store.dispatch('chat/closeChat');
+        this.$store.dispatch('prefs/setChatShownPref', false); // Mark that user doesn't want chat shown
       }
     }
   }

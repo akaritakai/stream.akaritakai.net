@@ -37,12 +37,9 @@
     },
     methods: {
       establishListener() {
-        let socket;
-        if (process.env.NODE_ENV === "development") {
-          socket = new WebSocket("ws://localhost/stream/status");
-        } else {
-          socket = new WebSocket("wss://stream.akaritakai.net/stream/status");
-        }
+        const url = new URL('/stream/status', window.location.href);
+        url.protocol = url.protocol.replace('http', 'ws');
+        const socket = new WebSocket(url.href);
         const stream = this;
         socket.onmessage = function(event) {
           stream.$store.dispatch('stream/updateState', JSON.parse(event.data));

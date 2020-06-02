@@ -8,6 +8,7 @@ import { time } from './time';
 import { nick } from './nick';
 import { chat } from './chat';
 import { telemetry } from './telemetry';
+import { prefs } from './prefs';
 
 Vue.use(Vuex);
 
@@ -17,19 +18,24 @@ const store = new Vuex.Store({
     time,
     nick,
     chat,
-    telemetry
+    telemetry,
+    prefs
   },
   plugins: [
     createPersistedState({
       paths: [
         'nick.nick',
-        'telemetry.telemetryId'
+        'telemetry.telemetryId',
+        'prefs.volumePref',
+        'prefs.chatShownPref'
       ]
     }),
     createMutationsSharer({
       predicate: [
         'nick/setNick',
-        'telemetry/setId'
+        'telemetry/setId',
+        'prefs/setVolumePref',
+        'prefs/setChatShownPref'
       ]
     })
   ]

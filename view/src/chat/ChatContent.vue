@@ -1,5 +1,5 @@
 <template>
-  <div id="chat-content-container">
+  <div id="chat-content-container" v-bind:class="{'v-center': !(enabled && nick && nick.length > 0)}">
     <template v-if="enabled">
       <!-- Chat enabled -->
       <template v-if="nick && nick.length > 0">
@@ -16,7 +16,7 @@
       </template>
       <template v-else>
         <!-- Nick needs to be set -->
-        <span>Choose a nick to start chatting</span>
+        <span class="instruction-message">Choose a nick to start chatting</span>
         <template v-if="inputError">
           <!--suppress HtmlFormInputWithoutLabel -->
           <input class="error" type="text" v-model="inputNick" maxlength="25" @keydown.enter.prevent="setNick" autofocus/>
@@ -30,7 +30,7 @@
     </template>
     <template v-else>
       <!-- Chat disabled -->
-      <span>Chat has been disabled</span>
+      <span class="instruction-message">Chat has been disabled</span>
     </template>
   </div>
 </template>
@@ -141,12 +141,14 @@
     font-family: 'Questrial', sans-serif;
     font-size: 20px;
     font-weight: 600;
-    justify-content: center;
     line-height: 20px;
     min-width: 100%;
     overflow: hidden;
     padding: 15px 15px 0;
     vertical-align: baseline;
+    &.v-center {
+      justify-content: center;
+    }
     input {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: hsla(0, 0%, 100%, 0.12);
@@ -188,6 +190,9 @@
       padding: 5px;
       text-align: center;
       white-space: pre-wrap;
+    }
+    .instruction-message {
+      text-align: center;
     }
   }
 

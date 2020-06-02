@@ -87,6 +87,10 @@ public class Main {
     router.get("/health").handler(new HealthCheckHandler());
 
     if (config.isDevelopment()) {
+      router.route().handler(event -> {
+        event.response().putHeader("Access-Control-Allow-Origin", "*");
+        event.next();
+      });
       router.route("/media/*").handler(StaticHandler.create()
           .setAllowRootFileSystemAccess(true)
           .setCachingEnabled(false)

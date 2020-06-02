@@ -57,6 +57,9 @@
       font-family: 'Open Sans', sans-serif;
       font-size: 35px;
       padding-bottom: 30px;
+      padding-left: 5px;
+      padding-right: 5px;
+      text-align: center;
     }
     .spinner {
       height: 38px;

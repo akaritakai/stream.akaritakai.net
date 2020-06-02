@@ -28,12 +28,9 @@
     },
     methods: {
       establishListener() {
-        let socket;
-        if (process.env.NODE_ENV === "development") {
-          socket = new WebSocket("ws://localhost/telemetry");
-        } else {
-          socket = new WebSocket("wss://stream.akaritakai.net/telemetry");
-        }
+        const url = new URL('/telemetry', window.location.href);
+        url.protocol = url.protocol.replace('http', 'ws');
+        const socket = new WebSocket(url.href);
         const app = this;
         socket.onopen = function() {
           setTimeout(() => { app.sendTelemetry(socket) }, telemetryTimeout);
@@ -79,6 +76,9 @@
 <style lang="scss">
   html {
     overflow-x: hidden;
+  }
+  body {
+    background-color: black;
   }
   #root {
     bottom: 0;

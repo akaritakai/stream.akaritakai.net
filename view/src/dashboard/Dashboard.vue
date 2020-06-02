@@ -320,12 +320,9 @@
       // establish stream listener
       const dashboard = this;
       function establishStreamListener() {
-        let socket;
-        if (process.env.NODE_ENV === "development") {
-          socket = new WebSocket("ws://localhost/stream/status");
-        } else {
-          socket = new WebSocket("wss://stream.akaritakai.net/stream/status");
-        }
+        const url = new URL('/stream/status', window.location.href);
+        url.protocol = url.protocol.replace('http', 'ws');
+        const socket = new WebSocket(url.href);
         socket.onmessage = function(event) {
           dashboard.$store.dispatch('stream/updateState', JSON.parse(event.data));
         };
@@ -337,12 +334,9 @@
 
       // establish chat listener
       function establishChatListener() {
-        let socket;
-        if (process.env.NODE_ENV === "development") {
-          socket = new WebSocket("ws://localhost/chat");
-        } else {
-          socket = new WebSocket("wss://stream.akaritakai.net/chat");
-        }
+        const url = new URL('/chat', window.location.href);
+        url.protocol = url.protocol.replace('http', 'ws');
+        const socket = new WebSocket(url.href);
         socket.onmessage = function(event) {
           const response = JSON.parse(event.data);
           if (response.responseType === "message") {
@@ -362,13 +356,8 @@
 
       // establish telemetry listener
       function establishTelemetryListener() {
-        let url;
-        if (process.env.NODE_ENV === "development") {
-          url = "http://localhost/telemetry/fetch";
-        } else {
-          url = "https://stream.akaritakai.net/telemetry/fetch";
-        }
-        axios.post(url, {
+        const url = new URL('/telemetry/fetch', window.location.href);
+        axios.post(url.href, {
           key: dashboard.apiKey
         }).then(response => {
           dashboard.telemetry = response.data;
