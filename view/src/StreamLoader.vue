@@ -27,11 +27,13 @@
           case "OFFLINE": return "Waiting for the stream to go live";
           case "PAUSE": return "The stream has been paused";
           case "ONLINE": {
-            if (this.now - this.endTime > 0) {
-              return "The stream has ended"; // The stream has ended but we haven't gotten the OFFLINE message yet
-            } else {
-              const timeUntil = (this.startTime - this.now) / 1000;
-              return "The stream will start in " + videojs.formatTime(timeUntil, 1);
+            if (this.endTime) { // Only pre-recorded streams have end times
+              if (this.now - this.endTime > 0) {
+                return "The stream has ended"; // The stream has ended but we haven't gotten the OFFLINE message yet
+              } else {
+                const timeUntil = (this.startTime - this.now) / 1000;
+                return "The stream will start in " + videojs.formatTime(timeUntil, 1);
+              }
             }
           }
         }

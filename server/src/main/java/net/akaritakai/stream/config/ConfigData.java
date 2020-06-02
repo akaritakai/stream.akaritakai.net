@@ -12,6 +12,7 @@ import lombok.Value;
 public class ConfigData {
   boolean development;
   String apiKey;
+  String livePlaylistUrl;
 
   // Production mode S3 client settings (where to fetch metadata/media)
   String awsRegion;

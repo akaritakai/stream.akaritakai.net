@@ -23,6 +23,7 @@ public class StreamState {
   public static final StreamState OFFLINE = StreamState.builder().status(StreamStateType.OFFLINE).build();
 
   StreamStateType status;
+  boolean live;
   @JsonInclude(Include.NON_NULL) String playlist;
   @JsonInclude(Include.NON_NULL) String mediaName;
   @JsonInclude(Include.NON_NULL) @JsonSerialize(converter = DurationToNumberConverter.class) Duration mediaDuration;

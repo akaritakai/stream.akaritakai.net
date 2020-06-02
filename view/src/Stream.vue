@@ -29,7 +29,7 @@
       streamRunning() {
         return this.status === "ONLINE" // stream is online
           && (this.now - this.startTime >= 0) // stream has started
-          && (this.now - this.endTime < 0); // stream hasn't ended yet
+          && (!this.endTime || (this.now - this.endTime < 0)) // stream hasn't ended yet
       }
     },
     mounted() {

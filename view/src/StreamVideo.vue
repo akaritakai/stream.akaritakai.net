@@ -80,7 +80,8 @@
         'mediaDuration',
         'startTime',
         'endTime',
-        'seekTime'
+        'seekTime',
+        'live'
       ])
     },
     data() {
@@ -105,40 +106,44 @@
       });
       this.player.fill(true);
 
-      // Customize the control bar to our liking
-      // Goal: [VOLUME -------------- DESCRIPTION DISPLAY -------------- FULLSCREEN]
 
-      // Create a description display control
-      const mediaName = this.mediaName;
-      const TimeDisplay = videojs.getComponent('TimeDisplay');
-      class DescriptionDisplay extends TimeDisplay {
-        constructor(player, options) {
-          super(player, options);
-          this.on(player, 'durationchange', this.updateContent);
-        }
+      if (!this.live) {
+        // Customize the control bar to our liking
+        // Goal: [VOLUME -------------- DESCRIPTION DISPLAY -------------- FULLSCREEN]
 
-        createEl() {
-          const el = videojs.dom.createEl('div', {
-            className: 'vjs-description-display'
-          });
-          videojs.dom.appendContent(el, mediaName);
-          return el;
-        }
+        // Create a description display control
+        const mediaName = this.mediaName;
+        const TimeDisplay = videojs.getComponent('TimeDisplay');
+        class DescriptionDisplay extends TimeDisplay {
+          constructor(player, options) {
+            super(player, options);
+            this.on(player, 'durationchange', this.updateContent);
+          }
 
-        updateContent() {
-          const currentTime = this.player_.currentTime();
-          const duration = this.player_.duration();
-          const timeString = videojs.formatTime(currentTime, 1) + " / " + videojs.formatTime(duration, 1);
-          videojs.dom.emptyEl(this.el());
-          videojs.dom.appendContent(this.el(), mediaName + " - " + timeString);
+          createEl() {
+            const el = videojs.dom.createEl('div', {
+              className: 'vjs-description-display'
+            });
+            videojs.dom.appendContent(el, mediaName);
+            return el;
+          }
+
+          updateContent() {
+            // Only called if the stream is pre-recorded
+            const currentTime = this.player_.currentTime();
+            const duration = this.player_.duration();
+            const timeString = videojs.formatTime(currentTime, 1) + " / " + videojs.formatTime(duration, 1);
+            videojs.dom.emptyEl(this.el());
+            videojs.dom.appendContent(this.el(), mediaName + " - " + timeString);
+          }
         }
+        const descriptionDisplay = new DescriptionDisplay(this.player);
+
+        // Insert it right before the fullscreen control (at the end of the bar)
+        const controlBar = document.getElementsByClassName('vjs-control-bar')[0];
+        const fullscreenControl = document.getElementsByClassName('vjs-fullscreen-control')[0];
+        controlBar.insertBefore(descriptionDisplay.el(), fullscreenControl);
       }
-      const descriptionDisplay = new DescriptionDisplay(this.player);
-
-      // Insert it right before the fullscreen control (at the end of the bar)
-      const controlBar = document.getElementsByClassName('vjs-control-bar')[0];
-      const fullscreenControl = document.getElementsByClassName('vjs-fullscreen-control')[0];
-      controlBar.insertBefore(descriptionDisplay.el(), fullscreenControl);
 
       // Handle updating quality info
       this.player.on('progress', () => {
@@ -220,11 +225,13 @@
       seekStream() {
         // Seeks the stream to the appropriate location
         // Note: We assume the stream has already started and is running
-        const startTime = this.startTime; // the time the stream started
-        const seekTimeMs = this.seekTime; // where the stream was seeked to when the stream started
-        const now = new Date().getTime(); // the current time
-        const seekTime = ((now - startTime) + seekTimeMs) / 1000;
-        this.player.currentTime(seekTime);
+        if (!this.live) { // The stream can only be seeked if it is pre-recorded
+          const startTime = this.startTime; // the time the stream started
+          const seekTimeMs = this.seekTime; // where the stream was seeked to when the stream started
+          const now = new Date().getTime(); // the current time
+          const seekTime = ((now - startTime) + seekTimeMs) / 1000;
+          this.player.currentTime(seekTime);
+        }
       }
     }
   }

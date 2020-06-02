@@ -1,5 +1,6 @@
 const state = {
   status: "OFFLINE",
+  live: null,
   playlist: null,
   mediaName: null,
   mediaDuration: null,
@@ -20,6 +21,7 @@ const mutations = {
     state.startTime = newState.startTime;
     state.endTime = newState.endTime;
     state.seekTime = newState.seekTime;
+    state.live = newState.live;
   },
   updateQualityInfo(state, newQualityInfo) {
     state.quality = newQualityInfo.quality;

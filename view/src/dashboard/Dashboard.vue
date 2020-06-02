@@ -94,6 +94,10 @@
             <input v-model="form.start.delay" type="text" class="form-control" id="startDelay" placeholder="(Optional) The delay in seconds to start">
           </div>
           <div class="form-group">
+            <label for="startLive">Live</label>
+            <input v-model="form.start.live" type="checkbox" class="form-control" id="startLive">
+          </div>
+          <div class="form-group">
             <button type="submit" class="btn btn-primary" @click="startStream" v-if="!form.start.inProgress">Start Stream</button>
             <button type="submit" class="btn btn-primary" v-if="form.start.inProgress" disabled>
               <b-spinner small/> Starting...
@@ -202,7 +206,8 @@
             name: '',
             delay: '',
             seekTime: '',
-            startAt: ''
+            startAt: '',
+            live: false
           },
           pause: {
             inProgress: false
@@ -239,7 +244,8 @@
         'mediaDuration',
         'startTime',
         'endTime',
-        'seekTime'
+        'seekTime',
+        'live'
       ]),
       ...mapState('time', ['now']),
       ...mapState('apiKey', ['apiKey']),
@@ -268,7 +274,7 @@
         // stream explicitly online and started and not yet finished
         return this.status === "ONLINE"
           && (this.now - this.startTime) >= 0
-          && (this.endTime - this.now) > 0;
+          && (!this.endTime || ((this.endTime - this.now) > 0));
       },
       streamPaused() {
         // stream explicitly paused
@@ -286,7 +292,9 @@
         }
       },
       mediaPositionDescription() {
-        if (this.streamStartingSoon || this.streamPaused) {
+        if (this.live) {
+          return null;
+        } else if (this.streamStartingSoon || this.streamPaused) {
           return videojs.formatTime(this.seekTime / 1000, 1)
             + " / "
             + videojs.formatTime(this.mediaDuration / 1000, 1);
@@ -416,7 +424,8 @@
           name: this.form.start.name,
           seekTime: this.convertSeekTime(this.form.start.seekTime),
           delay: this.convertDelay(this.form.start.delay),
-          startAt: this.convertStartAt(this.form.start.startAt)
+          startAt: this.convertStartAt(this.form.start.startAt),
+          live: this.form.start.live
         }).then(response => {
           this.showResult(true, response.data);
           this.form.start.inProgress = false;
