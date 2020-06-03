@@ -48,16 +48,8 @@
   }
 
   // Add the hls.js handler if the browser does not natively support HLS
-  const supportsNativeHls = (function() {
-    const video = document.createElement("video");
-    if (!videojs.getTech('Html5').isSupported()) {
-      return false;
-    }
-    const isSupported = (/maybe|probably/i).test(video.canPlayType("application/x-mpegURL"));
-    video.remove();
-    return isSupported;
-  });
-  if (!supportsNativeHls()) {
+  const isAppleDevice = navigator.platform && /iPad|iPhone|iPod/.test(navigator.platform);
+  if (!isAppleDevice) {
     videojs.getTech('Html5').registerSourceHandler({
       canHandleSource(source) {
         if (/^application\/(x-mpegURL|vnd\.apple\.mpegURL)$/i.test(source.type)) {
