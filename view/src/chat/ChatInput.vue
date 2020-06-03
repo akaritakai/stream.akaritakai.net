@@ -90,10 +90,9 @@
 
     padding: 15px 15px 15px 15px;
     .chat-input-area {
-      position: relative;
       display: inline-block;
+      position: relative;
       textarea {
-        min-height: 40px;
         background-clip: padding-box;
         background-color: hsla(0, 0%, 100%, 0.15);
         box-sizing: border-box;
@@ -104,6 +103,7 @@
         font-size: 12px;
         line-height: 18px;
         margin: 0;
+        min-height: 40px;
         outline: 0;
         overflow-x: hidden;
         overflow-y: scroll;

@@ -57,17 +57,11 @@
 
 <style lang="scss">
   #stream {
-    // Fill the container as much as possible
+    // Fill the container
     flex-grow: 1;
     flex-shrink: 0;
 
     // Flex container
     display: inline-flex;
-
-    //flex-grow: 1;
-    //display: flex;
-    //flex-direction: column;
-    //flex-wrap: nowrap;
-    //align-items: stretch;
   }
 </style>

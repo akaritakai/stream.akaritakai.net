@@ -66,25 +66,24 @@
   #chat {
     // Take up a maximum of 340px
     &.chat-wide {
-      //flex-grow: 0;
-      flex-basis: 340px;
       max-width: 340px;
       flex-shrink: 0;
+      flex-basis: 340px;
     }
 
-    // Fill the container as much as possible
+    // Fill the container
     &.chat-narrow {
-      flex-grow: 1;
       max-height: 50%;
+      flex-grow: 1;
     }
 
     // Flex container
+    align-content: space-between;
+    align-items: stretch;
     display: inline-flex;
     flex-direction: column;
     flex-wrap: nowrap;
     justify-content: space-between;
-    align-items: stretch;
-    align-content: space-between;
 
     background-color: rgb(24, 24, 27);
   }

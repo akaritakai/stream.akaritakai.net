@@ -127,6 +127,7 @@
           pictureInPictureToggle: false
         }
       });
+      this.player.fill(true);
 
       if (!this.live) {
         // Customize the control bar to our liking

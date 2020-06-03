@@ -110,18 +110,18 @@
   }
   #root {
     // Fill the entire screen
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    top: 0;
     bottom: 0;
+    height: 100%;
     left: 0;
+    position: absolute;
     right: 0;
+    top: 0;
+    width: 100%;
 
     // Flex container
+    align-items: stretch;
     display: inline-flex;
     flex-wrap: nowrap;
-    align-items: stretch;
 
     // Narrow view
     &.root-narrow {

@@ -153,10 +153,9 @@
     flex-shrink: 1;
 
     // Flex container
+    align-content: center;
     display: inline-flex;
     flex-direction: column;
-    align-content: center;
-    //flex-wrap: wrap;
 
     box-sizing: border-box;
     color: rgb(222, 222, 227);
@@ -171,7 +170,6 @@
     &.v-center {
       justify-content: center;
     }
-
 
     input {
       background-color: rgba(255, 255, 255, 0.15);

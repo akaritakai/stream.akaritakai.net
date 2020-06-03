@@ -47,11 +47,11 @@
 
 <style lang="scss">
   #chat-header {
-    // flex container
+    // Flex container
+    align-items: stretch;
     display: inline-flex;
     flex-direction: column;
     flex-wrap: nowrap;
-    align-items: stretch;
 
     font-family: 'Questrial', sans-serif;
 
@@ -67,18 +67,12 @@
   }
 
   #chat-title {
-    // fill my container
+    // Fill my container
     flex-basis: 40px;
-    min-height: 40px;
-    //flex-shrink: 0;
-    //flex-grow: 1;
     flex-shrink: 0;
+    min-height: 40px;
 
-    //flex-basis: 40px;
-    //min-height: 40px;
-    //max-height: 40px;
-
-    // flex container
+    // Flex container
     display: inline-flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -122,17 +116,17 @@
   }
 
   #chat-settings {
-    // fill my container
-    flex-shrink: 0;
+    // Fill my container
     flex-basis: 40px;
+    flex-shrink: 0;
     min-height: 40px;
 
-    // flex container
+    // Flex container
+    align-content: center;
+    align-items: center;
     display: inline-flex;
     flex-direction: row;
     justify-content: center;
-    align-content: center;
-    align-items: center;
 
     border-bottom-color: rgb(39, 39, 40);
     border-bottom-style: solid;
