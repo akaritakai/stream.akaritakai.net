@@ -100,14 +100,14 @@
     data() {
       return {
         player: null,
-        started: false,
+        state: 'STOPPED',
         userControllingVolume: false
       }
     },
     watch: {
       // Guard against the video being paused
       now() {
-        if (this.started && this.player.paused()) {
+        if (this.state === 'STARTED' && this.player.paused()) {
           this.playStream();
         }
       }
@@ -203,19 +203,20 @@
       if (!this.live) {
         this.player.on('durationchange', () => {
           // The stream can only be seeked if it is pre-recorded
-          const startTime = this.startTime; // the time the stream started
-          const seekTimeMs = this.seekTime; // where the stream was seeked to when the stream started
-          const now = new Date().getTime(); // the current time
-          const seekTime = ((now - startTime) + seekTimeMs) / 1000;
-          if (seekTime - this.player.currentTime() > 2) { // 2 second drift is too much
-            this.player.currentTime(seekTime);
+          if (this.state === 'STARTED') {
+            const startTime = this.startTime; // the time the stream started
+            const seekTimeMs = this.seekTime; // where the stream was seeked to when the stream started
+            const now = new Date().getTime(); // the current time
+            const seekTime = ((now - startTime) + seekTimeMs) / 1000;
+            if (seekTime - this.player.currentTime() > 5) { // 5 second drift is too much
+              this.player.currentTime(seekTime);
+            }
           }
         });
       }
 
       // Handle iOS pausing the video when transitioning to/from fullscreen
       this.player.on('fullscreenchange', () => {
-        console.log('full screen change occurred');
         this.playStream();
       });
 
@@ -266,6 +267,10 @@
     },
     methods: {
       playStream() {
+        if (this.state === 'STARTING') {
+          return;
+        }
+        this.state = 'STARTING';
         this.player.play().then(_ => {
           this.$store.dispatch('stream/updateMutedInfo', {
             muted: this.player.muted()
@@ -286,7 +291,7 @@
       onStreamPlaying() {
         this.seekStream();
         this.userControllingVolume = true;
-        this.started = true;
+        this.state = 'STARTED';
       },
       seekStream() {
         // Seeks the stream to the appropriate location
@@ -307,8 +312,6 @@
   @import "../node_modules/video.js/dist/video-js.css";
 
   #stream-video {
-    //background: black;
-    //height: 100%;
     display: flex;
     flex-grow: 1;
     align-items: stretch;
