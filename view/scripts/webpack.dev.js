@@ -90,7 +90,7 @@ module.exports = {
       scriptLoading: 'defer',
       meta: {
         description: 'streaming service',
-        viewport: 'width=device-width, initial-scale=1'
+        viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0'
       }
     }),
 

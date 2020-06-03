@@ -58,37 +58,17 @@
             }
           }
         }
-      },
-      width(newWidth, oldWidth) {
-        if (oldWidth >= 680 && newWidth < 680) {
-          // Hide chat as the viewport has gotten too small
-          this.$store.dispatch('chat/closeChat');
-        }
       }
     },
     mounted() {
       this.establishListener();
 
-      // Create initial chat window status
-      if (document.getElementById("root").clientWidth < 680) {
-        // Don't show the chat by default if the viewport is too small
-        this.$store.dispatch('chat/closeChat');
+      // Restore the user's preference
+      if (this.chatShownPref) {
+        this.$store.dispatch('chat/openChat');
       } else {
-        // Restore the user's preference
-        if (this.chatShownPref) {
-          this.$store.dispatch('chat/openChat');
-        } else {
-          this.$store.dispatch('chat/closeChat');
-        }
+        this.$store.dispatch('chat/closeChat');
       }
-
-      // Watch for resizes
-      this.$nextTick(() => {
-        window.addEventListener('resize', this.onResize);
-      });
-    },
-    beforeDestroy() {
-      window.removeEventListener('resize', this.onResize);
     },
     methods: {
       openChat() {
@@ -122,9 +102,6 @@
             setTimeout(chat.establishListener, 100);
           };
         }
-      },
-      onResize() {
-        this.width = document.getElementById("root").clientWidth;
       }
     }
   }

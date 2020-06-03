@@ -1,5 +1,8 @@
 <template>
-  <div id="chat-header">
+  <div id="chat-header" v-bind:class="{
+      'with-chat-settings': enabled && nick && nick.length > 0,
+      'without-chat-settings': !(enabled && nick && nick.length > 0)
+    }">
     <div id="chat-title">
       <svg class="icon" viewBox="0 0 20 20" @click="closeChat">
           <g><path d="M4 16V4H2v12h2zM13 15l-1.5-1.5L14 11H6V9h8l-2.5-2.5L13 5l5 5-5 5z"/></g>
@@ -44,20 +47,48 @@
 
 <style lang="scss">
   #chat-header {
-    display: flex;
+    // flex container
+    display: inline-flex;
     flex-direction: column;
-    flex-grow: 0;
+    flex-wrap: nowrap;
+    align-items: stretch;
+
     font-family: 'Questrial', sans-serif;
+
+    &.with-chat-settings {
+      flex-basis: 80px;
+      min-height: 80px;
+    }
+
+    &.without-chat-settings {
+      flex-basis: 40px;
+      min-height: 40px;
+    }
   }
 
   #chat-title {
+    // fill my container
+    flex-basis: 40px;
+    min-height: 40px;
+    //flex-shrink: 0;
+    //flex-grow: 1;
+    flex-shrink: 0;
+
+    //flex-basis: 40px;
+    //min-height: 40px;
+    //max-height: 40px;
+
+    // flex container
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+
     border-bottom-color: rgb(39, 39, 40);
     border-bottom-style: solid;
     border-bottom-width: 1px;
-    display: flex;
-    flex-direction: row;
-    height: 40px;
-    justify-content: space-between;
+
+    // Left item
     .icon {
       color: rgb(239, 239, 241);
       fill: currentColor;
@@ -71,6 +102,7 @@
       width: 20px;
       z-index: auto;
     }
+    // Center item
     .text {
       align-self: center;
       color: rgb(222, 222, 227);
@@ -79,6 +111,7 @@
       line-height: 18px;
       text-transform: uppercase;
     }
+    // Right item
     .padding {
       height: 14px;
       min-height: 10px;
@@ -89,18 +122,31 @@
   }
 
   #chat-settings {
+    // fill my container
+    flex-shrink: 0;
+    flex-basis: 40px;
+    min-height: 40px;
+
+    // flex container
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: center;
     align-content: center;
     align-items: center;
+
     border-bottom-color: rgb(39, 39, 40);
     border-bottom-style: solid;
     border-bottom-width: 1px;
     color: rgb(222, 222, 227);
-    display: flex;
-    flex-direction: row;
     font-size: 13px;
     font-weight: 400;
-    height: 40px;
-    justify-content: center;
+
+    // Left item
+    .description {
+      font-weight: 600;
+      padding-right: 5px;
+    }
+    // Center item
     input {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: hsla(0, 0%, 100%, 0.12);
@@ -127,10 +173,7 @@
         color: rgb(239, 239, 241);
       }
     }
-    .description {
-      font-weight: 600;
-      padding-right: 5px;
-    }
+    // Right item
     .icon {
       color: rgb(239, 239, 241);
       fill: currentColor;

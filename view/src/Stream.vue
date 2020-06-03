@@ -1,5 +1,5 @@
 <template>
-  <div id="stream">
+  <div id="stream" ref="stream">
     <stream-video v-if="streamRunning"/>
     <stream-loader v-else/>
   </div>
@@ -57,8 +57,17 @@
 
 <style lang="scss">
   #stream {
-    align-self: stretch;
+    // Fill the container as much as possible
     flex-grow: 1;
-    height: 100%;
+    flex-shrink: 0;
+
+    // Flex container
+    display: inline-flex;
+
+    //flex-grow: 1;
+    //display: flex;
+    //flex-direction: column;
+    //flex-wrap: nowrap;
+    //align-items: stretch;
   }
 </style>

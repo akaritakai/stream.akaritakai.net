@@ -127,7 +127,6 @@
           pictureInPictureToggle: false
         }
       });
-      this.player.fill(true);
 
       if (!this.live) {
         // Customize the control bar to our liking
@@ -307,8 +306,18 @@
   @import "../node_modules/video.js/dist/video-js.css";
 
   #stream-video {
-    background: black;
-    height: 100%;
+    //background: black;
+    //height: 100%;
+    display: flex;
+    flex-grow: 1;
+    align-items: stretch;
+  }
+
+  // Cause the video.js element to fill the available space
+  .vjs_video_3-dimensions {
+    width: auto;
+    height: auto;
+    flex-grow: 1;
   }
 
   // Cause elements to space out evenly on the control bar

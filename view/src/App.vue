@@ -1,5 +1,10 @@
 <template>
-  <div id="root">
+  <div id="root"
+       ref="root"
+       v-bind:class="{
+         'root-wide': this.isWide,
+         'root-narrow': this.isNarrow
+       }">
     <stream/>
     <chat/>
   </div>
@@ -23,10 +28,33 @@
       Chat,
       Stream
     },
+    data() {
+      return {
+        width: 0
+      }
+    },
+    computed: {
+      isNarrow() {
+        return this.width < 680;
+      },
+      isWide() {
+        return !this.isNarrow;
+      }
+    },
     mounted() {
       this.establishListener();
+      this.$nextTick(() => {
+        window.addEventListener('resize', this.onResize);
+        this.onResize();
+      });
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.onResize);
     },
     methods: {
+      onResize() {
+        this.width = this.$refs.root.clientWidth;
+      },
       establishListener() {
         const url = new URL('/telemetry', window.location.href);
         url.protocol = url.protocol.replace('http', 'ws');
@@ -81,15 +109,28 @@
     background-color: black;
   }
   #root {
-    bottom: 0;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    height: 100%;
-    left: 0;
+    // Fill the entire screen
     position: absolute;
-    right: 0;
-    top: 0;
+    height: 100%;
     width: 100%;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    // Flex container
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+
+    // Narrow view
+    &.root-narrow {
+      flex-direction: column;
+    }
+
+    // Wide view
+    &.root-wide {
+      flex-direction: row;
+    }
   }
 </style>

@@ -125,37 +125,54 @@
       },
       onNickError(error) {
         this.inputError = error;
+      },
+      onResize() {
+        this.$nextTick(() => this.scrollToBottom());
       }
     },
     mounted() {
-      this.$nextTick(() => this.scrollToBottom());
+      this.$nextTick(() => {
+        this.scrollToBottom();
+        window.addEventListener('resize', this.onResize);
+        this.onResize();
+      });
     },
     updated() {
       this.$nextTick(() => this.scrollToBottom());
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.onResize);
     }
   }
 </script>
 
 <style lang="scss">
   #chat-content-container {
+    // Fill my container
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    // Flex container
+    display: inline-flex;
+    flex-direction: column;
     align-content: center;
+    //flex-wrap: wrap;
+
     box-sizing: border-box;
     color: rgb(222, 222, 227);
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    flex-wrap: wrap;
     font-family: 'Questrial', sans-serif;
     font-size: 20px;
     font-weight: 600;
     line-height: 20px;
-    min-width: 100%;
     overflow: hidden;
     padding: 15px 15px 0;
     vertical-align: baseline;
+
     &.v-center {
       justify-content: center;
     }
+
+
     input {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: hsla(0, 0%, 100%, 0.12);
@@ -197,6 +214,7 @@
       padding: 5px;
       text-align: center;
       white-space: pre-wrap;
+      align-self: center;
     }
     .icon {
       color: rgb(239, 239, 241);
@@ -218,8 +236,6 @@
     font-size: 12px;
     justify-content: normal;
     line-height: 20px;
-    min-height: 100%;
-    width: 320px;
     overflow-x: hidden;
     overflow-y: scroll;
     padding: 0;

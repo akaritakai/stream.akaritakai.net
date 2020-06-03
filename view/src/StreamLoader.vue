@@ -44,21 +44,20 @@
 
 <style lang="scss">
   #stream-loader {
-    align-content: center;
-    align-items: center;
-    align-self: stretch;
-    background: black;
-    display: flex;
     flex-direction: column;
-    height: 100%;
+    display: flex;
+    flex-wrap: nowrap;
     justify-content: center;
+    align-items: center;
+    align-content: center;
+    flex-grow: 1;
     .text {
       color: white;
       font-family: 'Open Sans', sans-serif;
       font-size: 35px;
       padding-bottom: 30px;
-      padding-left: 5px;
-      padding-right: 5px;
+      padding-left: 10px;
+      padding-right: 10px;
       text-align: center;
     }
     .spinner {

@@ -81,14 +81,19 @@
 
 <style lang="scss">
   #chat-input {
-    display: flex;
+    // Fill my container
+    flex-shrink: 0;
+
+    // Flex container
+    display: inline-flex;
     flex-direction: column;
-    flex-grow: 0;
+
     padding: 15px 15px 15px 15px;
     .chat-input-area {
       position: relative;
       display: inline-block;
       textarea {
+        min-height: 40px;
         background-clip: padding-box;
         background-color: hsla(0, 0%, 100%, 0.15);
         box-sizing: border-box;
