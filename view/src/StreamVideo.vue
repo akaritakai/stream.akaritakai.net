@@ -22,29 +22,47 @@
   function HlsJsHandler(source, tech) {
     const el = tech.el();
     let duration = null;
-    const hls = this.hls = new Hls();
+    const hls = this.hls = new Hls({
+      debug: process.env.NODE_ENV === "development",
+      enableWorker: true,
+      maxBufferSize: 40*1000*1000
+    });
 
-    this.dispose = function() {
+    this.dispose = () => {
       hls.destroy();
     };
 
-    this.duration = function() {
-      return duration || el.duration || 0;
-    };
+    this.duration = () => duration || el.duration || 0;
 
-    hls.on(Hls.Events.LEVEL_LOADED, function(event, data) {
+    hls.on(Hls.Events.LEVEL_LOADED, (event, data) => {
       duration = data.details.live ? Infinity : data.details.totalduration;
     });
 
-    Object.keys(Hls.Events).forEach(function(key) {
+    Object.keys(Hls.Events).forEach(key => {
       const eventName = Hls.Events[key];
       hls.on(eventName, function(event, data) {
         tech.trigger(eventName, data);
       });
     });
 
-    hls.attachMedia(el);
     hls.loadSource(source.src);
+    hls.attachMedia(el);
+    hls.on(Hls.Events.ERROR, (event, data) => {
+      if (data.details === Hls.ErrorDetails.BUFFER_FULL_ERROR) {
+        hls.startLoad();
+      } else {
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              hls.recoverMediaError();
+              break;
+          }
+        }
+      }
+    });
   }
 
   // Add the hls.js handler if the browser does not natively support HLS
@@ -164,7 +182,7 @@
         try {
           const hls = this.player.tech({ IWillNotUseThisInPlugins: true }).sourceHandler_.hls;
           const currentQuality = hls.levels[hls.currentLevel];
-          const quality = function() {
+          const quality = () => {
             if (!currentQuality || !currentQuality.width || !currentQuality.height || !currentQuality.bitrate) {
               return null;
             } else {
@@ -174,9 +192,7 @@
               return width + "x" + height + "@" + kbps + "k";
             }
           }
-          const bandwidth = function() {
-            return isNaN(hls.bandwidthEstimate) ? null : Math.round(hls.bandwidthEstimate);
-          }
+          const bandwidth = () => isNaN(hls.bandwidthEstimate) ? null : Math.round(hls.bandwidthEstimate)
           this.$store.dispatch('stream/updateQualityInfo', {
             quality: quality(),
             bandwidth: bandwidth()
