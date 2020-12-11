@@ -6,7 +6,7 @@
 </template>
 
 <script>
-  import {mapState} from "vuex";
+  import {mapGetters, mapState} from "vuex";
 
   const StreamLoader = () => import(
     /* webpackPrefetch: true */
@@ -25,7 +25,7 @@
     },
     computed: {
       ...mapState('stream', ['status', 'startTime', 'endTime']),
-      ...mapState('time', ['now']),
+      ...mapGetters('time', ['now']),
       streamRunning() {
         return this.status === "ONLINE" // stream is online
           && (this.now - this.startTime >= 0) // stream has started

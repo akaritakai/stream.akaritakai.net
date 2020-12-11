@@ -186,7 +186,7 @@
 
 <script>
   import Vue from 'vue';
-  import {mapState} from 'vuex';
+  import {mapGetters, mapState} from 'vuex';
   import {BootstrapVue, AlertPlugin} from 'bootstrap-vue';
   import axios from 'axios';
   import videojs from 'video.js';
@@ -247,9 +247,9 @@
         'seekTime',
         'live'
       ]),
-      ...mapState('time', ['now']),
       ...mapState('apiKey', ['apiKey']),
       ...mapState('chat', ['enabled']),
+      ...mapGetters('time', ['now']),
       chatStatusDescription() {
         if (this.enabled) {
           return "ENABLED";

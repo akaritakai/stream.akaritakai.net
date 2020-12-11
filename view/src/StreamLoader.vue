@@ -14,14 +14,14 @@
 </template>
 
 <script>
-  import {mapState} from "vuex";
+  import {mapGetters, mapState} from "vuex";
   import videojs from 'video.js/core'; // we only need the core library because we are not including http-streaming
 
   export default {
     name: 'stream-loader',
     computed: {
       ...mapState('stream', ['status', 'startTime', 'endTime']),
-      ...mapState('time', ['now']),
+      ...mapGetters('time', ['now']),
       message() {
         switch (this.status) {
           case "OFFLINE": return "Waiting for the stream to go live";

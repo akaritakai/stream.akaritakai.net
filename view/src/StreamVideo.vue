@@ -5,7 +5,7 @@
 </template>
 
 <script>
-  import {mapState} from 'vuex';
+  import {mapGetters, mapState} from 'vuex';
   import videojs from 'video.js/core'; // we only need the core library because we are not including http-streaming
 
   // video.js's http-streaming library is awful and broken. Fun unfixed bugs include:
@@ -104,8 +104,8 @@
         'seekTime',
         'live'
       ]),
-      ...mapState('time', ['now']),
-      ...mapState('prefs', ['volumePref'])
+      ...mapState('prefs', ['volumePref']),
+      ...mapGetters('time', ['now'])
     },
     data() {
       return {

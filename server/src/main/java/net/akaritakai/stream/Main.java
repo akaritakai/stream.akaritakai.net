@@ -9,6 +9,7 @@ import net.akaritakai.stream.chat.ChatManager;
 import net.akaritakai.stream.config.Config;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.HealthCheckHandler;
+import net.akaritakai.stream.handler.TimeHandler;
 import net.akaritakai.stream.handler.chat.ChatClearHandler;
 import net.akaritakai.stream.handler.chat.ChatClientHandler;
 import net.akaritakai.stream.handler.chat.ChatDisableHandler;
@@ -85,6 +86,7 @@ public class Main {
         .handler(new TelemetrySendHandler(telemetryStore));
 
     router.get("/health").handler(new HealthCheckHandler());
+    router.get("/time").handler(new TimeHandler());
 
     if (config.isDevelopment()) {
       router.route().handler(event -> {
