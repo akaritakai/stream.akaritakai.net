@@ -2,12 +2,23 @@ import axios from 'axios';
 
 const state = {
   current: new Date().getTime(),
-  offset: 0
+  offsets: []
 };
 
 const getters = {
-  now(state) {
-    return state.current + state.offset;
+  now(state, getters) {
+    return state.current + getters.offset;
+  },
+  offset(state) {
+    if (state.offsets.length === 0) {
+      return 0;
+    }
+    const median = arr => {
+      const mid = Math.floor(arr.length / 2),
+        values = [...arr].sort((a, b) => a - b);
+      return arr.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+    };
+    return median(state.offsets);
   }
 }
 
@@ -16,7 +27,10 @@ const mutations = {
     state.current = new Date().getTime();
   },
   updateOffset(state, offset) {
-    state.offset = offset;
+    if (state.offsets.length > 10) {
+      state.offsets.shift();
+    }
+    state.offsets.push(offset);
   }
 };
 
