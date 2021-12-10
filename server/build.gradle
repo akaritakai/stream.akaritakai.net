@@ -31,10 +31,9 @@ dependencies {
     implementation "org.apache.commons:commons-lang3:3.10"
     implementation "org.slf4j:slf4j-api:1.7.30"
 
-    runtime "org.apache.logging.log4j:log4j-core:2.13.1"
-    runtime "org.apache.logging.log4j:log4j-1.2-api:2.13.1"
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.13.1"
-
+    runtime "org.apache.logging.log4j:log4j-core:2.15.0"
+    runtime "org.apache.logging.log4j:log4j-1.2-api:2.15.0"
+    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.15.0"
 }
 
 application {
