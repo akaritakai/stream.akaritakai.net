@@ -27,6 +27,8 @@ public class ConfigData {
   // Enable logging request info
   boolean logRequestInfo;
 
+  int port;
+
   @JsonPOJOBuilder(withPrefix = "")
   public static class ConfigDataBuilder {
   }

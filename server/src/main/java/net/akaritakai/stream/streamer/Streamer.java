@@ -61,6 +61,7 @@ public class Streamer {
 
         // Use the request provided delay or none at all
         Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
+        LOG.info("delay={}", delay);
         // We use the provided start time + delay, or now + delay
         Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
 

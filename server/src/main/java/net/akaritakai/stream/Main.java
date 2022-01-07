@@ -14,6 +14,7 @@ import net.akaritakai.stream.handler.chat.ChatClearHandler;
 import net.akaritakai.stream.handler.chat.ChatClientHandler;
 import net.akaritakai.stream.handler.chat.ChatDisableHandler;
 import net.akaritakai.stream.handler.chat.ChatEnableHandler;
+import net.akaritakai.stream.handler.chat.ChatWriteHandler;
 import net.akaritakai.stream.handler.stream.PauseCommandHandler;
 import net.akaritakai.stream.handler.stream.ResumeCommandHandler;
 import net.akaritakai.stream.handler.stream.StartCommandHandler;
@@ -76,6 +77,9 @@ public class Main {
     router.post("/chat/enable")
         .handler(BodyHandler.create())
         .handler(new ChatEnableHandler(chatManager, config.getApiKey()));
+    router.post("/chat/write")
+        .handler(BodyHandler.create())
+        .handler(new ChatWriteHandler(chatManager, config.getApiKey()));
     router.get("/chat")
         .handler(new ChatClientHandler(vertx, chatManager));
 
@@ -111,7 +115,7 @@ public class Main {
 
     vertx.createHttpServer()
         .requestHandler(router)
-        .listen(80, event -> {
+        .listen(config.getPort(), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
           } else {

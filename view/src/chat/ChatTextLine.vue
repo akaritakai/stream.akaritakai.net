@@ -14,6 +14,8 @@
 </template>
 
 <script>
+  import { checkText } from 'smile2emoji'
+
   export default {
     name: 'chat-text-line',
     data() {
@@ -82,7 +84,7 @@
           if (!validUrl) {
             parts.push({
               type: "plaintext",
-              content: token
+              content: checkText(token)
             })
           }
         });

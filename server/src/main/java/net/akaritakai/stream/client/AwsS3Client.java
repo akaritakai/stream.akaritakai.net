@@ -17,9 +17,12 @@ import io.vertx.core.Vertx;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.models.stream.StreamMetadata;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class AwsS3Client {
+  private static final Logger LOG = LoggerFactory.getLogger(AwsS3Client.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   protected final Vertx _vertx;
@@ -52,7 +55,9 @@ public class AwsS3Client {
         StreamMetadata result = OBJECT_MAPPER.readValue(data, StreamMetadata.class);
         promise.complete(result);
       } catch (Exception e) {
-        promise.fail(e);
+        if (!promise.tryFail(e)) {
+          LOG.error("unexpected exception", e);
+        }
       }
     });
     return promise.future();
@@ -70,7 +75,9 @@ public class AwsS3Client {
         String result = IOUtils.toString(is, StandardCharsets.UTF_8);
         promise.complete(result);
       } catch (Exception e) {
-        promise.fail(e);
+        if (!promise.tryFail(e)) {
+          LOG.error("unexpected exception", e);
+        }
       }
     });
     return promise.future();
