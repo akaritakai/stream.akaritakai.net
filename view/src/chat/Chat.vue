@@ -91,7 +91,7 @@
           };
           this.socket.onopen = function() {
             chat.connected = true;
-            chat.socket.send(JSON.stringify({requestType: "join"}));
+            chat.socket.send(JSON.stringify({requestType: "join", nickname: this.nick}));
           };
           this.socket.onerror = function() {
             chat.socket.close();

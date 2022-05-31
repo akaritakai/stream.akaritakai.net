@@ -1,5 +1,6 @@
 <template>
   <div class="chat-text-line">
+    <span class="chat-line-time"><time>{{ time }}</time></span>
     <span class="chat-line-nick" v-bind:style="{color: selectedNickColor}">{{ nick }}</span>
     <span>: </span>
     <template v-for="part in messageParts">
@@ -42,7 +43,8 @@
     },
     props: {
       nick: String,
-      message: String
+      message: String,
+      timestamp: Number
     },
     created() {
       // Select the nick color by:
@@ -59,6 +61,17 @@
       this.selectedNickColor = this.nickColors[Math.abs(hashCode(this.nick)) % this.nickColors.length];
     },
     computed: {
+      time() {
+        const timestamp = this.timestamp;
+        console.log("time=" + timestamp);
+        if (isNaN(timestamp)) {
+          return "--:--";
+        }
+        const date = new Date(timestamp);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        return hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0');
+      },
       messageParts() {
         const parts = [];
 
@@ -99,9 +112,9 @@
     span {
       color: rgb(239, 239, 241);
       font-family: 'Questrial', sans-serif;
-      font-size: 12px;
+      font-size: 20px;
       font-weight: 400;
-      line-height: 20px;
+      line-height: 24px;
       margin: 0;
       overflow-wrap: break-word;
       padding: 0;
@@ -111,6 +124,11 @@
         font-weight: 700;
         word-break: break-all;
       }
+    }
+    time {
+      font-size: 12px;
+       background-color: rgb(192, 192, 192);
+       color: rgb(0, 0, 0);
     }
   }
 

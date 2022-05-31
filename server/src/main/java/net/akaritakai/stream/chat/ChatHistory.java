@@ -45,6 +45,7 @@ public class ChatHistory {
           .messageType(request.getMessageType())
           .nickname(request.getNickname())
           .message(request.getMessage())
+          .timestamp(System.currentTimeMillis())
           .build();
       _queue.add(message);
     }

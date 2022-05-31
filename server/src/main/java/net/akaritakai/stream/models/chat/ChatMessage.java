@@ -14,6 +14,7 @@ public class ChatMessage {
   ChatMessageType messageType;
   String nickname;
   String message;
+  Long timestamp;
 
   @JsonPOJOBuilder(withPrefix = "")
   public static class ChatMessageBuilder {

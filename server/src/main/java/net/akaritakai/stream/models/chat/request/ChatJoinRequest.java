@@ -16,6 +16,8 @@ import net.akaritakai.stream.models.chat.ChatSequence;
 public class ChatJoinRequest extends ChatRequest {
   @JsonInclude(JsonInclude.Include.NON_NULL) ChatSequence sequence;
 
+  String nickname;
+
   @JsonPOJOBuilder(withPrefix = "")
   public static class ChatJoinRequestBuilder {
   }

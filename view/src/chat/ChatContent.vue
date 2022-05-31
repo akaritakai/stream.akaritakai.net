@@ -8,7 +8,7 @@
           <template v-for="message in messages">
             <div class="chat-line">
               <template v-if="message.messageType === 'TEXT'">
-                <chat-text-line :nick="message.nickname" :message="message.message"/>
+                <chat-text-line :nick="message.nickname" :message="message.message" :timestamp="message.timestamp"/>
               </template>
             </div>
           </template>
@@ -176,7 +176,7 @@
       border-color: hsla(0, 0%, 100%, 0.12);
       border-radius: 4px;
       color: rgb(239, 239, 241);
-      font-size: 13px;
+      font-size: 20px;
       margin: 10px auto;
       transition-delay: 0s, 0s, 0s;
       transition-duration: 0.1s, 0.1s, 0.1s;
@@ -231,9 +231,9 @@
 
   #chat-content {
     box-sizing: content-box;
-    font-size: 12px;
+    font-size: 20px;
     justify-content: normal;
-    line-height: 20px;
+    line-height: 24px;
     overflow-x: hidden;
     overflow-y: scroll;
     padding: 0;
