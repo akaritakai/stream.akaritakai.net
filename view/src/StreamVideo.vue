@@ -248,6 +248,8 @@
       });
       this.userControllingVolume = true;
 
+      console.log("src="+this.playlist);
+
       // Load the stream
       this.player.src({
         "type": "application/x-mpegURL",

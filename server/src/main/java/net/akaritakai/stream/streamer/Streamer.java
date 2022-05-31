@@ -64,21 +64,39 @@ public class Streamer {
         // We use the provided start time + delay, or now + delay
         Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
 
-        // Create the new state
-        StreamState newState = StreamState.builder()
-                .status(StreamStateType.ONLINE)
-                .playlist(_livePlaylistUrl)
-                .mediaName("LIVE")
-                .startTime(startTime)
-                .live(true)
-                .build();
-        setState(newState);
+        _client.getMetadata(request.getName()).onFailure(ex -> {
+          // Create the new state
+          StreamState newState = StreamState.builder()
+                  .status(StreamStateType.ONLINE)
+                  .playlist(_livePlaylistUrl)
+                  .mediaName("LIVE")
+                  .startTime(startTime)
+                  .live(true)
+                  .build();
+          setState(newState);
+          
+          // Notify all the listeners that the stream changed
+          _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
 
-        // Notify all the listeners that the stream changed
-        _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
+          // Stream start requested successfully
+          promise.complete();
+        }).onSuccess(metadata -> {
+          // Create the new state
+          StreamState newState = StreamState.builder()
+                  .status(StreamStateType.ONLINE)
+                  .playlist(metadata.getPlaylist())
+                  .mediaName(metadata.getName())
+                  .startTime(startTime)
+                  .live(true)
+                  .build();
+          setState(newState);
+          
+          // Notify all the listeners that the stream changed
+          _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
 
-        // Stream start requested successfully
-        promise.complete();
+          // Stream start requested successfully
+          promise.complete();
+        });
       } else {
         // Stream is pre-recorded
 
