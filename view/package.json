@@ -11,7 +11,7 @@
     "bootstrap": "^4.4.1",
     "bootstrap-vue": "^2.12.0",
     "hls.js": "^0.13.2",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "simplebar-vue": "^1.4.0",
     "video.js": "^7.14.3",
     "vue": "^2.6.11",
