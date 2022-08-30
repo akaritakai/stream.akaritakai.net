@@ -29,7 +29,11 @@ public class TelemetrySendHandler implements Handler<RoutingContext> {
   @Override
   public void handle(RoutingContext context) {
     InetAddress ipAddress = getIpAddressFromRequest(context.request());
-    ServerWebSocket socket = context.request().upgrade();
+    context.request().toWebSocket().onFailure(context::fail).onSuccess(socket -> handle(context, ipAddress, socket));
+  }
+
+  private void handle(RoutingContext context, InetAddress ipAddress, ServerWebSocket socket) {
+    context.request().resume();
     try {
       socket.textMessageHandler(message -> {
         try {

@@ -18,24 +18,33 @@ repositories {
 }
 
 dependencies {
-    annotationProcessor "org.projectlombok:lombok:1.18.12"
-    compileOnly "org.projectlombok:lombok:1.18.12"
-    implementation "commons-io:commons-io:2.6"
-    implementation "com.amazonaws:aws-java-sdk-s3:1.11.762"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.10.3"
-    implementation "com.google.guava:guava:28.2-jre"
-    implementation "io.lindstrom:m3u8-parser:0.9"
-    implementation "io.vertx:vertx-core:3.8.5"
-    implementation "io.vertx:vertx-web:3.8.5"
-    implementation "io.vertx:vertx-web-client:3.8.5"
-    implementation "org.apache.commons:commons-lang3:3.10"
-    implementation "org.slf4j:slf4j-api:1.7.30"
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'com.amazonaws:aws-java-sdk-s3:1.12.286'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'io.lindstrom:m3u8-parser:0.22'
+    implementation 'io.vertx:vertx-core:4.3.3'
+    implementation 'io.vertx:vertx-web:4.3.3'
+    implementation 'io.vertx:vertx-web-client:4.3.3'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.slf4j:slf4j-api:1.7.36'
 
-    runtime "org.apache.logging.log4j:log4j-core:2.16.0"
-    runtime "org.apache.logging.log4j:log4j-1.2-api:2.16.0"
-    runtime "org.apache.logging.log4j:log4j-slf4j-impl:2.16.0"
+    runtime 'org.apache.logging.log4j:log4j-core:2.18.0'
+    runtime 'org.apache.logging.log4j:log4j-1.2-api:2.18.0'
+    runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.18.0'
 }
 
 application {
     mainClassName = "net.akaritakai.stream.Main"
+}
+
+tasks.register('copyWebRoot', Copy) {
+    from layout.projectDirectory.dir("../view/build")
+    into layout.buildDirectory.dir("resources/main/webroot")
+}
+
+processResources {
+    dependsOn("copyWebRoot")
 }

@@ -41,7 +41,10 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
 
   @Override
   public void handle(RoutingContext event) {
-    ServerWebSocket socket = event.request().upgrade();
+    event.request().toWebSocket().onFailure(event::fail).onSuccess(socket -> handle(event, socket));
+  }
+  private void handle(RoutingContext event, ServerWebSocket socket) {
+    event.request().resume();
     _sockets.add(socket);
     socket.endHandler(endEvent -> _sockets.remove(socket));
     socket.closeHandler(closeEvent -> _sockets.remove(socket));

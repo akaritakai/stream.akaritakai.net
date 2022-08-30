@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
 import net.akaritakai.stream.chat.ChatManager;
 import net.akaritakai.stream.config.Config;
@@ -93,25 +94,21 @@ public class Main {
         event.response().putHeader("Access-Control-Allow-Origin", "*");
         event.next();
       });
-      router.route("/media/*").handler(StaticHandler.create()
-          .setAllowRootFileSystemAccess(true)
+      router.route("/media/*").handler(StaticHandler.create(FileSystemAccess.ROOT, config.getMediaRootDir())
           .setCachingEnabled(false)
           .setAlwaysAsyncFS(true)
           .setEnableFSTuning(true)
-          .setEnableRangeSupport(true)
-          .setWebRoot(config.getMediaRootDir()));
-      router.route().handler(StaticHandler.create()
-          .setAllowRootFileSystemAccess(true)
+          .setEnableRangeSupport(true));
+      router.route().handler(StaticHandler.create(/*FileSystemAccess.ROOT, config.getWebRootDir()*/)
           .setCachingEnabled(false)
           .setAlwaysAsyncFS(true)
           .setEnableFSTuning(true)
-          .setEnableRangeSupport(true)
-          .setWebRoot(config.getWebRootDir()));
+          .setEnableRangeSupport(true));
     }
 
     vertx.createHttpServer()
         .requestHandler(router)
-        .listen(80, event -> {
+        .listen(config.getPort(), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
           } else {
