@@ -4618,6 +4618,11 @@ jpeg-js@^0.3.4:
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.6.0.tgz#c72a09f15c1bdce142f49dbf1170bdf8adac2470"
   integrity sha512-JVzAR/AjBvVt2BmYhxRCSYysDsPcssdmTFnzyLEts9qNwmjmu4JTAMYubEfwVOSwpQ1I1sKKFcxhZCI2buerfw==
 
+js-tabs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/js-tabs/-/js-tabs-1.0.1.tgz#48c1a4809107c04329887e2ad3080c4f732f42a4"
+  integrity sha512-8m+fkLgfJW36WpTvsRV6U+m6q4NTwXt9qOUj0kSjxEKlYN+DUpsuQ6MHz2mafyz9pvKdcZcIsQ991bUv9yLpUg==
+
 js-tokens@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"

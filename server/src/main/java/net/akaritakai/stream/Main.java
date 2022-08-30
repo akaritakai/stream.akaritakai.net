@@ -6,15 +6,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.FileSystemAccess;
 import io.vertx.ext.web.handler.StaticHandler;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.Chat;
 import net.akaritakai.stream.config.Config;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.HealthCheckHandler;
 import net.akaritakai.stream.handler.TimeHandler;
-import net.akaritakai.stream.handler.chat.ChatClearHandler;
-import net.akaritakai.stream.handler.chat.ChatClientHandler;
-import net.akaritakai.stream.handler.chat.ChatDisableHandler;
-import net.akaritakai.stream.handler.chat.ChatEnableHandler;
 import net.akaritakai.stream.handler.stream.PauseCommandHandler;
 import net.akaritakai.stream.handler.stream.ResumeCommandHandler;
 import net.akaritakai.stream.handler.stream.StartCommandHandler;
@@ -24,6 +20,9 @@ import net.akaritakai.stream.handler.telemetry.TelemetryFetchHandler;
 import net.akaritakai.stream.handler.telemetry.TelemetrySendHandler;
 import net.akaritakai.stream.streamer.Streamer;
 import net.akaritakai.stream.telemetry.TelemetryStore;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,14 +30,16 @@ import org.slf4j.LoggerFactory;
 public class Main {
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     ConfigData config = Config.getConfig();
     LOG.info("Loaded config {}", config);
+
+    StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
+    Scheduler scheduler = schedulerFactory.getScheduler();
 
     Vertx vertx = Vertx.vertx();
     Router router = Router.router(vertx);
     Streamer streamer = new Streamer(vertx, config);
-    ChatManager chatManager = new ChatManager(vertx);
     TelemetryStore telemetryStore = new TelemetryStore();
 
     if (config.isLogRequestInfo()) {
@@ -68,17 +69,7 @@ public class Main {
         .handler(BodyHandler.create())
         .handler(new ResumeCommandHandler(streamer, config.getApiKey()));
 
-    router.post("/chat/clear")
-        .handler(BodyHandler.create())
-        .handler(new ChatClearHandler(chatManager, config.getApiKey()));
-    router.post("/chat/disable")
-        .handler(BodyHandler.create())
-        .handler(new ChatDisableHandler(chatManager, config.getApiKey()));
-    router.post("/chat/enable")
-        .handler(BodyHandler.create())
-        .handler(new ChatEnableHandler(chatManager, config.getApiKey()));
-    router.get("/chat")
-        .handler(new ChatClientHandler(vertx, chatManager));
+    new Chat(config, vertx, router).install();
 
     router.post("/telemetry/fetch")
         .handler(BodyHandler.create())
@@ -111,6 +102,12 @@ public class Main {
         .listen(config.getPort(), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
+            try {
+              scheduler.start();
+            } catch (SchedulerException e) {
+              LOG.error("Error starting scheduler", e);
+              System.exit(2);
+            }
           } else {
             LOG.error("Failed to start up the server", event.cause());
           }
