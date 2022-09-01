@@ -6,67 +6,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col">
-        <h2>Status</h2>
-        <table class="table">
-          <tbody>
-          <tr>
-            <th scope="row">Stream Status</th>
-            <td>{{ streamStatusDescription }}</td>
-          </tr>
-          <tr v-if="!streamStopped">
-            <th scope="row">Media Name</th>
-            <td>{{ mediaName }}</td>
-          </tr>
-          <tr v-if="!streamStopped">
-            <th scope="row">Media Position</th>
-            <td>{{ mediaPositionDescription }}</td>
-          </tr>
-          <tr v-if="streamStartingSoon">
-            <th scope="row">Stream Starts In</th>
-            <td>{{ streamStartInDescription }}</td>
-          </tr>
-          <tr>
-            <th scope="row">Chat Status</th>
-            <td>{{ chatStatusDescription }}</td>
-          </tr>
-          </tbody>
-        </table>
-        <h2>Viewers</h2>
-        <table class="table">
-          <tbody>
-          <tr>
-            <th>IP Address</th>
-            <th>Nick</th>
-            <th>Stream Size</th>
-            <th>Chat Opened</th>
-            <th>Window Visible</th>
-            <th>Full Screen</th>
-            <th>Stream Muted</th>
-            <th>Quality</th>
-            <th>Bandwidth</th>
-          </tr>
-          <template v-for="t in telemetry">
-            <tr>
-              <td>{{ t.ipAddress }}</td>
-              <td>{{ t.request.chatNick }}</td>
-              <td>{{ t.request.streamWidth }}x{{ t.request.streamHeight }}</td>
-              <td>{{ t.request.chatOpened }}</td>
-              <td>{{ t.request.visible }}</td>
-              <td>{{ t.request.videoFullScreen || t.request.pageFullScreen }}</td>
-              <td>{{ t.request.muted }}</td>
-              <td>{{ t.request.videoQuality ? t.request.videoQuality : "" }}</td>
-              <td>{{ t.request.clientBandwidth ? (t.request.clientBandwidth > 10000000
-                ? Math.round(t.request.clientBandwidth / 1000000) + " Mbps"
-                : Math.round(t.request.clientBandwidth / 1000) + " Kbps")
-                : "" }}</td>
-            </tr>
-          </template>
-          </tbody>
-        </table>
-      </div>
-      <div class="col">
-        <h2>Actions</h2>
+      <div class="col text-center">
         <b-form v-if="needApiKey" @submit.stop.prevent="true">
           <div class="form-group">
             <label for="apiKey">API Key</label>
@@ -76,99 +16,185 @@
             <button type="submit" class="btn btn-primary" @click="setApiKey">Set API Key</button>
           </div>
         </b-form>
-        <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="true">
-          <div class="form-group">
-            <label for="startName">Name</label>
-            <input v-model="form.start.name" type="text" class="form-control" id="startName" placeholder="The name of the media to start" required>
-          </div>
-          <div class="form-group">
-            <label for="startSeekTime">Seek Time</label>
-            <input v-model="form.start.seekTime" type="text" class="form-control" id="startSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
-          </div>
-          <div class="form-group">
-            <label for="startStartAt">Start At</label>
-            <input v-model="form.start.startAt" type="text" class="form-control" id="startStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
-          </div>
-          <div class="form-group">
-            <label for="startDelay">Delay</label>
-            <input v-model="form.start.delay" type="text" class="form-control" id="startDelay" placeholder="(Optional) The delay in seconds to start">
-          </div>
-          <div class="form-group">
-            <label for="startLive">Live</label>
-            <input v-model="form.start.live" type="checkbox" class="form-control" id="startLive">
-          </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="startStream" v-if="!form.start.inProgress">Start Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.start.inProgress" disabled>
-              <b-spinner small/> Starting...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey && streamStartingSoon" @submit.stop.prevent="true">
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
-              <b-spinner small/> Stopping...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey && streamRunning" @submit.stop.prevent="true">
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="pauseStream" v-if="!form.pause.inProgress">Pause Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.pause.inProgress" disabled>
-              <b-spinner small/> Pausing...
-            </button>
-            <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
-              <b-spinner small/> Stopping...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="true">
-          <div class="form-group">
-            <label for="resumeSeekTime">Seek Time</label>
-            <input v-model="form.resume.seekTime" type="text" class="form-control" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
-          </div>
-          <div class="form-group">
-            <label for="resumeStartAt">Start At</label>
-            <input v-model="form.resume.startAt" type="text" class="form-control" id="resumeStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
-          </div>
-          <div class="form-group">
-            <label for="resumeDelay">Delay</label>
-            <input v-model="form.resume.delay" type="text" class="form-control" id="resumeDelay" placeholder="(Optional) The delay in seconds to start">
-          </div>
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="resumeStream" v-if="!form.resume.inProgress">Resume Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.resume.inProgress" disabled>
-              <b-spinner small/> Resuming...
-            </button>
-            <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
-            <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
-              <b-spinner small/> Stopping...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey && enabled" @submit.stop.prevent="true">
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="disableChat" v-if="!form.disableChat.inProgress">Disable Chat</button>
-            <button type="submit" class="btn btn-primary" v-if="form.disableChat.inProgress" disabled>
-              <b-spinner small/> Disabling...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey && !enabled" @submit.stop.prevent="true">
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="enableChat" v-if="!form.enableChat.inProgress">Enable Chat</button>
-            <button type="submit" class="btn btn-primary" v-if="form.enableChat.inProgress" disabled>
-              <b-spinner small/> Enabling...
-            </button>
-          </div>
-        </b-form>
-        <b-form v-if="!needApiKey" @submit.stop.prevent="true">
-          <div class="form-group">
-            <button type="submit" class="btn btn-primary" @click="resetApiKey">Reset API Key</button>
-          </div>
-        </b-form>
+        <b-tabs v-if="!needApiKey">
+          <b-tab title="Stream Status" active>
+            <table class="table">
+              <tbody>
+              <tr>
+                <th scope="row">Stream Status</th>
+                <td>{{ streamStatusDescription }}</td>
+              </tr>
+              <tr v-if="!streamStopped">
+                <th scope="row">Media Name</th>
+                <td>{{ mediaName }}</td>
+              </tr>
+              <tr v-if="!streamStopped">
+                <th scope="row">Media Position</th>
+                <td>{{ mediaPositionDescription }}</td>
+              </tr>
+              <tr v-if="streamStartingSoon">
+                <th scope="row">Stream Starts In</th>
+                <td>{{ streamStartInDescription }}</td>
+              </tr>
+              <tr>
+                <th scope="row">Chat Status</th>
+                <td>{{ chatStatusDescription }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </b-tab>
+          <b-tab title="Viewers">
+            <table class="table">
+              <tbody>
+              <tr>
+                <th>IP Address</th>
+                <th>Nick</th>
+                <th>Stream Size</th>
+                <th>Chat Opened</th>
+                <th>Window Visible</th>
+                <th>Full Screen</th>
+                <th>Stream Muted</th>
+                <th>Quality</th>
+                <th>Bandwidth</th>
+              </tr>
+              <template v-for="t in telemetry">
+                <tr>
+                  <td>{{ t.ipAddress }}</td>
+                  <td>{{ t.request.chatNick }}</td>
+                  <td>{{ t.request.streamWidth }}x{{ t.request.streamHeight }}</td>
+                  <td>{{ t.request.chatOpened }}</td>
+                  <td>{{ t.request.visible }}</td>
+                  <td>{{ t.request.videoFullScreen || t.request.pageFullScreen }}</td>
+                  <td>{{ t.request.muted }}</td>
+                  <td>{{ t.request.videoQuality ? t.request.videoQuality : "" }}</td>
+                  <td>{{ t.request.clientBandwidth ? (t.request.clientBandwidth > 10000000
+                    ? Math.round(t.request.clientBandwidth / 1000000) + " Mbps"
+                    : Math.round(t.request.clientBandwidth / 1000) + " Kbps")
+                    : "" }}</td>
+                </tr>
+              </template>
+              </tbody>
+            </table>
+          </b-tab>
+          <b-tab title="Actions">
+            <table class="table">
+              <tbody>
+              <tr><td>
+                <div class="form-group">
+                <input v-model="selectionFilter" type="text" class="form-control" id="prefix" placeholder="Filter/Search">
+                <select size="20" v-model="selectionSelected" class="form-control" width="100%">
+                  <option v-for="entry in form.selection.streamNames" :key="entry.name" v-bind:value="entry.name">{{ entry.metadataName }}{{ entry.metadataLive ? " (live)" : "" }}</option>
+                </select></div>
+              </td>
+              <td>
+                <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <label for="startName">Name</label>
+                    <input v-model="form.start.name" type="text" class="form-control" id="startName" placeholder="The name of the media to start" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="startSeekTime">Seek Time</label>
+                    <input v-model="form.start.seekTime" type="text" class="form-control" id="startSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
+                  </div>
+                  <div class="form-group">
+                    <label for="startStartAt">Start At</label>
+                    <input v-model="form.start.startAt" type="text" class="form-control" id="startStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
+                  </div>
+                  <div class="form-group">
+                    <label for="startDelay">Delay</label>
+                    <input v-model="form.start.delay" type="text" class="form-control" id="startDelay" placeholder="(Optional) The delay in seconds to start">
+                  </div>
+                  <div class="form-group">
+                    <label for="startLive">Live</label>
+                    <input v-model="form.start.live" type="checkbox" class="form-control" id="startLive">
+                  </div>
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="startStream" v-if="!form.start.inProgress">Start Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.start.inProgress" disabled>
+                      <b-spinner small/> Starting...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey && streamStartingSoon" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
+                      <b-spinner small/> Stopping...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey && streamRunning" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="pauseStream" v-if="!form.pause.inProgress">Pause Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.pause.inProgress" disabled>
+                      <b-spinner small/> Pausing...
+                    </button>
+                    <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
+                      <b-spinner small/> Stopping...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <label for="resumeSeekTime">Seek Time</label>
+                    <input v-model="form.resume.seekTime" type="text" class="form-control" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
+                  </div>
+                  <div class="form-group">
+                    <label for="resumeStartAt">Start At</label>
+                    <input v-model="form.resume.startAt" type="text" class="form-control" id="resumeStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
+                  </div>
+                  <div class="form-group">
+                    <label for="resumeDelay">Delay</label>
+                    <input v-model="form.resume.delay" type="text" class="form-control" id="resumeDelay" placeholder="(Optional) The delay in seconds to start">
+                  </div>
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="resumeStream" v-if="!form.resume.inProgress">Resume Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.resume.inProgress" disabled>
+                      <b-spinner small/> Resuming...
+                    </button>
+                    <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
+                      <b-spinner small/> Stopping...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey && enabled" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="disableChat" v-if="!form.disableChat.inProgress">Disable Chat</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.disableChat.inProgress" disabled>
+                      <b-spinner small/> Disabling...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey && !enabled" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="enableChat" v-if="!form.enableChat.inProgress">Enable Chat</button>
+                    <button type="submit" class="btn btn-primary" v-if="form.enableChat.inProgress" disabled>
+                      <b-spinner small/> Enabling...
+                    </button>
+                  </div>
+                </b-form>
+                <b-form v-if="!needApiKey" @submit.stop.prevent="true">
+                  <div class="form-group">
+                    <button type="submit" class="btn btn-primary" @click="resetApiKey">Reset API Key</button>
+                  </div>
+                </b-form>
+             </td></tr>
+             </tbody>
+           </table>
+         </b-tab>
+          <b-tab title="Scheduling">
+            <b-tabs>
+              <b-tab title="Variables">
+              </b-tab>
+              <b-tab title="Jobs">
+              </b-tab>
+              <b-tab title="Triggers">
+              </b-tab>
+            </b-tabs>
+          </b-tab>
+        </b-tabs>
       </div>
     </div>
     <div class="row">
@@ -226,8 +252,16 @@
           },
           enableChat: {
             inProgress: false
+          },
+          selection: {
+            filter: '',
+            selected: '',
+            streamNames: [],
+            inProgress: false
           }
         },
+        selectionFilter: '',
+        selectionSelected: '',
         result: {
           show: false,
           success: false,
@@ -316,6 +350,19 @@
         }
       }
     },
+    watch: {
+      selectionFilter(value) {
+        ;[this.form.selection.filter] = [value];
+        this.populateSelection();
+      },
+      selectionSelected(value) {
+        function findFunc(v, index, array) {
+          return v.name == value;
+        }
+        let entry = this.form.selection.streamNames.find(findFunc);
+        ;[this.form.selection.selected, this.form.start.name, this.form.start.live] = [value, value, entry.metadataLive];
+      }
+    },
     mounted() {
       // establish stream listener
       const dashboard = this;
@@ -365,6 +412,8 @@
         });
       }
       establishTelemetryListener();
+
+      this.populateSelection();
     },
     methods: {
       disableChat() {
@@ -476,6 +525,26 @@
             this.showResult(false, error.message);
           }
           this.form.stop.inProgress = false;
+        })
+      },
+      populateSelection() {
+        this.form.selection.inProgress = true;
+        this.form.selection.streamNames = [];
+        axios.post('/stream/dir', {
+          key: this.apiKey,
+          filter: this.form.selection.filter
+        }).then(response => {
+          this.form.selection.inProgress = false;
+          response.data.entries.forEach(entry => {
+            this.form.selection.streamNames.push(entry)
+          });
+        }).catch(error => {
+          if (error.response) {
+            this.showResult(false, error.response.data);
+          } else {
+            this.showResult(false, error.message);
+          }
+          this.form.selection.inProgress = false;
         })
       },
       showResult(success, message) {

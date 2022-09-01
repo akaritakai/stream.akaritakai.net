@@ -1,6 +1,11 @@
 package net.akaritakai.stream.client;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.Predicate;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -8,13 +13,14 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
 import net.akaritakai.stream.config.ConfigData;
+import net.akaritakai.stream.models.stream.StreamEntry;
 import net.akaritakai.stream.models.stream.StreamMetadata;
 import org.apache.commons.io.IOUtils;
 
@@ -69,6 +75,68 @@ public class AwsS3Client {
           S3ObjectInputStream is = object.getObjectContent()) {
         String result = IOUtils.toString(is, StandardCharsets.UTF_8);
         promise.complete(result);
+      } catch (Exception e) {
+        promise.fail(e);
+      }
+    });
+    return promise.future();
+  }
+
+  public Future<List<StreamEntry>> listMetadataNames(Predicate<String> matcher) {
+    Promise<List<StreamEntry>> promise = Promise.promise();
+    _vertx.runOnContext(event -> {
+      try {
+        List<Future<StreamEntry>> list = new ArrayList<>();
+        ObjectListing objectListing = _client.listObjects(_bucketName, "media/");
+        for (;;) {
+          for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
+            int pos = summary.getKey().indexOf('/', 6);
+            if (pos > 6 && "/metadata.json".equals(summary.getKey().substring(pos))) {
+              String name = summary.getKey().substring(6, pos);
+              if (matcher.test(name)) {
+                Promise<StreamEntry> res = Promise.promise();
+                getMetadata(name)
+                        .onSuccess(metadata -> res.complete(StreamEntry.builder()
+                                .name(name)
+                                .metadataName(metadata.getName())
+                                .metadataLive(metadata.isLive())
+                                .build()))
+                        .onFailure(res::fail);
+                list.add(res.future());
+              }
+            }
+          }
+
+          if (objectListing.isTruncated()) {
+            objectListing = _client.listNextBatchOfObjects(objectListing);
+          } else {
+            if (list.isEmpty()) {
+              promise.complete(Collections.emptyList());
+            } else {
+              Iterator<Future<StreamEntry>> it = list.iterator();
+              it.next().onComplete(new Handler<AsyncResult<StreamEntry>>() {
+                List<StreamEntry> strings = new ArrayList<>();
+                @Override
+                public void handle(AsyncResult<StreamEntry> event) {
+                  try {
+                    if (event.succeeded()) {
+                      strings.add(event.result());
+                    } else {
+                      // log a maybe failire
+                    }
+                    if (it.hasNext()) {
+                      it.next().onComplete(this);
+                    } else {
+                      promise.complete(strings);
+                    }
+                  } catch (Exception e) {
+                    promise.fail(e);
+                  }
+                }
+              });
+            }
+          }
+        }
       } catch (Exception e) {
         promise.fail(e);
       }

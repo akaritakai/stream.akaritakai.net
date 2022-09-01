@@ -11,6 +11,7 @@ import net.akaritakai.stream.config.Config;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.HealthCheckHandler;
 import net.akaritakai.stream.handler.TimeHandler;
+import net.akaritakai.stream.handler.stream.DirCommandHandler;
 import net.akaritakai.stream.handler.stream.PauseCommandHandler;
 import net.akaritakai.stream.handler.stream.ResumeCommandHandler;
 import net.akaritakai.stream.handler.stream.StartCommandHandler;
@@ -68,6 +69,9 @@ public class Main {
     router.post("/stream/resume")
         .handler(BodyHandler.create())
         .handler(new ResumeCommandHandler(streamer, config.getApiKey()));
+    router.post("/stream/dir")
+        .handler(BodyHandler.create())
+        .handler(new DirCommandHandler(streamer, config.getApiKey()));
 
     new Chat(config, vertx, router).install();
 

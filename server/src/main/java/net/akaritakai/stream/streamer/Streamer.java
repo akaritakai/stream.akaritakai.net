@@ -2,11 +2,14 @@ package net.akaritakai.stream.streamer;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
@@ -15,6 +18,7 @@ import net.akaritakai.stream.client.AwsS3Client;
 import net.akaritakai.stream.client.FakeAwsS3Client;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.exception.StreamStateConflictException;
+import net.akaritakai.stream.models.stream.StreamEntry;
 import net.akaritakai.stream.models.stream.StreamState;
 import net.akaritakai.stream.models.stream.StreamStateType;
 import net.akaritakai.stream.models.stream.request.StreamPauseRequest;
@@ -298,6 +302,16 @@ public class Streamer {
   public void setState(StreamState state) {
     _state.set(state);
     LOG.info("New state = {}", state);
+  }
+
+  public Future<List<StreamEntry>> listStreams(String filter) {
+    return _client.listMetadataNames(filter != null && !filter.isBlank() ? new Predicate<String>() {
+      final Pattern pattern = Pattern.compile(filter.trim(), Pattern.CASE_INSENSITIVE);
+      @Override
+      public boolean test(String s) {
+        return pattern.matcher(s).find();
+      }
+    } : any -> true);
   }
 
   public void addListener(StreamerListener listener) {
