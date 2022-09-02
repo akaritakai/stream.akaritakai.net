@@ -11,6 +11,8 @@ import net.akaritakai.stream.config.Config;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.HealthCheckHandler;
 import net.akaritakai.stream.handler.TimeHandler;
+import net.akaritakai.stream.handler.info.LogFetchHandler;
+import net.akaritakai.stream.handler.info.LogSendHandler;
 import net.akaritakai.stream.handler.stream.DirCommandHandler;
 import net.akaritakai.stream.handler.stream.PauseCommandHandler;
 import net.akaritakai.stream.handler.stream.ResumeCommandHandler;
@@ -128,6 +130,12 @@ public class Main {
         .handler(new TelemetryFetchHandler(telemetryStore, config.getApiKey()));
     router.get("/telemetry")
         .handler(new TelemetrySendHandler(telemetryStore));
+
+    router.post("/log/fetch")
+            .handler(BodyHandler.create())
+            .handler(new LogFetchHandler(vertx, config.getApiKey()));
+    router.get("/log")
+            .handler(new LogSendHandler());
 
     router.get("/health").handler(new HealthCheckHandler());
     router.get("/time").handler(new TimeHandler());

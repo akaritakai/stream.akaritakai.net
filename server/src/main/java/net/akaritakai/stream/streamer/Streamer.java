@@ -2,10 +2,7 @@ package net.akaritakai.stream.streamer;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -325,13 +322,18 @@ public class Streamer {
   }
 
   public Future<List<StreamEntry>> listStreams(String filter) {
-    return _client.listMetadataNames(filter != null && !filter.isBlank() ? new Predicate<String>() {
-      final Pattern pattern = Pattern.compile(filter.trim(), Pattern.CASE_INSENSITIVE);
-      @Override
-      public boolean test(String s) {
-        return pattern.matcher(s).find();
-      }
-    } : any -> true);
+    try {
+      return _client.listMetadataNames(filter != null && !filter.isBlank() ? new Predicate<String>() {
+        final Pattern pattern = Pattern.compile(filter.trim(), Pattern.CASE_INSENSITIVE);
+
+        @Override
+        public boolean test(String s) {
+          return pattern.matcher(s).find();
+        }
+      } : any -> true);
+    } catch (java.util.regex.PatternSyntaxException ex) {
+      return Future.succeededFuture(Collections.emptyList());
+    }
   }
 
   public void addListener(StreamerListener listener) {
