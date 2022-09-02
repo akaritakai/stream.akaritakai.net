@@ -275,6 +275,9 @@
           success: false,
           message: ''
         },
+        quartz: {
+          jobFields: [
+        },
         telemetry: []
       }
     },

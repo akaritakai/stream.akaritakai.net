@@ -13,6 +13,8 @@ import net.akaritakai.stream.handler.HealthCheckHandler;
 import net.akaritakai.stream.handler.TimeHandler;
 import net.akaritakai.stream.handler.info.LogFetchHandler;
 import net.akaritakai.stream.handler.info.LogSendHandler;
+import net.akaritakai.stream.handler.quartz.JobsHandler;
+import net.akaritakai.stream.handler.quartz.TriggersHandler;
 import net.akaritakai.stream.handler.stream.DirCommandHandler;
 import net.akaritakai.stream.handler.stream.PauseCommandHandler;
 import net.akaritakai.stream.handler.stream.ResumeCommandHandler;
@@ -99,6 +101,8 @@ public class Main {
     schedulerFactory.initialize(schedulerProperties);
     Scheduler scheduler = schedulerFactory.getScheduler();
 
+    CheckAuth auth = new CheckAuthImpl(config.getApiKey());
+
     Vertx vertx = Vertx.vertx();
     Router router = Router.router(vertx);
     Streamer streamer = new Streamer(vertx, config, scheduler);
@@ -120,33 +124,40 @@ public class Main {
 
     router.post("/stream/start")
         .handler(BodyHandler.create())
-        .handler(new StartCommandHandler(streamer, config.getApiKey()));
+        .handler(new StartCommandHandler(streamer, auth));
     router.post("/stream/stop")
         .handler(BodyHandler.create())
-        .handler(new StopCommandHandler(streamer, config.getApiKey()));
+        .handler(new StopCommandHandler(streamer, auth));
     router.post("/stream/pause")
         .handler(BodyHandler.create())
-        .handler(new PauseCommandHandler(streamer, config.getApiKey()));
+        .handler(new PauseCommandHandler(streamer, auth));
     router.post("/stream/resume")
         .handler(BodyHandler.create())
-        .handler(new ResumeCommandHandler(streamer, config.getApiKey()));
+        .handler(new ResumeCommandHandler(streamer, auth));
     router.post("/stream/dir")
         .handler(BodyHandler.create())
-        .handler(new DirCommandHandler(streamer, config.getApiKey()));
+        .handler(new DirCommandHandler(streamer, auth));
 
     new Chat(config, vertx, router, scheduler).install();
 
     router.post("/telemetry/fetch")
         .handler(BodyHandler.create())
-        .handler(new TelemetryFetchHandler(telemetryStore, config.getApiKey()));
+        .handler(new TelemetryFetchHandler(telemetryStore, auth));
     router.get("/telemetry")
         .handler(new TelemetrySendHandler(telemetryStore));
 
     router.post("/log/fetch")
             .handler(BodyHandler.create())
-            .handler(new LogFetchHandler(vertx, config.getApiKey()));
+            .handler(new LogFetchHandler(vertx, auth));
     router.get("/log")
             .handler(new LogSendHandler());
+
+    router.post("/quartz/jobs")
+            .handler(BodyHandler.create())
+            .handler(new JobsHandler(scheduler, auth));
+    router.post("/quartz/triggers")
+            .handler(BodyHandler.create())
+            .handler(new TriggersHandler(scheduler, auth));
 
     router.get("/health").handler(new HealthCheckHandler());
     router.get("/time").handler(new TimeHandler());
