@@ -29,14 +29,15 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sqlite.JDBC;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.util.Optional;
+import java.util.Properties;
 
 
 public class Main {
@@ -86,6 +87,16 @@ public class Main {
     LOG.info("Loaded config {}", config);
 
     StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
+    Properties schedulerProperties = new Properties();
+    schedulerProperties.setProperty("org.quartz.threadPool.class", org.quartz.simpl.SimpleThreadPool.class.getName());
+    schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "1");
+    schedulerProperties.setProperty("org.quartz.jobStore.class", org.quartz.impl.jdbcjobstore.JobStoreTX.class.getName());
+    schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", org.quartz.impl.jdbcjobstore.StdJDBCDelegate.class.getName());
+    schedulerProperties.setProperty("org.quartz.jobStore.dataSource", "myDS");
+    schedulerProperties.setProperty("org.quartz.jobStore.useProperties", "true");
+    schedulerProperties.setProperty("org.quartz.dataSource.myDS.driver", JDBC.class.getName());
+    schedulerProperties.setProperty("org.quartz.dataSource.myDS.URL", "jdbc:sqlite:scheduler.db");
+    schedulerFactory.initialize(schedulerProperties);
     Scheduler scheduler = schedulerFactory.getScheduler();
 
     Vertx vertx = Vertx.vertx();
@@ -157,17 +168,13 @@ public class Main {
           .setEnableRangeSupport(true));
     }
 
+    scheduler.start();
+
     vertx.createHttpServer()
         .requestHandler(router)
         .listen(Optional.ofNullable(ns.getInt("port")).orElse(config.getPort()), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
-            try {
-              scheduler.start();
-            } catch (SchedulerException e) {
-              LOG.error("Error starting scheduler", e);
-              System.exit(2);
-            }
             Utils.triggerIfExists(scheduler, "start");
           } else {
             LOG.error("Failed to start up the server", event.cause());
