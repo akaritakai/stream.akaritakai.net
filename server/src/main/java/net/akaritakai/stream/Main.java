@@ -19,20 +19,68 @@ import net.akaritakai.stream.handler.stream.StopCommandHandler;
 import net.akaritakai.stream.handler.stream.StreamStatusHandler;
 import net.akaritakai.stream.handler.telemetry.TelemetryFetchHandler;
 import net.akaritakai.stream.handler.telemetry.TelemetrySendHandler;
+import net.akaritakai.stream.scheduling.Utils;
 import net.akaritakai.stream.streamer.Streamer;
 import net.akaritakai.stream.telemetry.TelemetryStore;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.util.Optional;
+
 
 public class Main {
   private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
   public static void main(String[] args) throws Exception {
-    ConfigData config = Config.getConfig();
+    ArgumentParser argumentParser = ArgumentParsers.newArgumentParser("StreamServer")
+            .defaultHelp(true)
+            .description("A basic video sharing and streaming service");
+    argumentParser.addArgument("-f", "--configFile")
+            .dest("configFile")
+            .help("Configuration file")
+            .metavar("FILE");
+    argumentParser.addArgument("-p", "--port")
+            .dest("port")
+            .help("Service TCP port number")
+            .type(Integer.class)
+            .metavar("PORT");
+    Namespace ns;
+    try {
+      ns = argumentParser.parseArgs(args);
+    } catch (ArgumentParserException e) {
+      argumentParser.handleError(e);
+      System.exit(1);
+      return;
+    }
+
+    ConfigData config = Config.getConfig(Optional
+                    .ofNullable(ns.getString("configFile"))
+                    .map(File::new)
+                    .filter(file -> {
+                      if (file.isFile() && file.canRead()) {
+                        return true;
+                      } else {
+                        LOG.error("File not found or not readable: {}", file);
+                        return false;
+                      }
+                    }).map(file -> {
+                      try {
+                        return file.toURI().toURL();
+                      } catch (MalformedURLException e) {
+                        LOG.error("Unexpected exception", e);
+                        throw new RuntimeException(e);
+                      }
+                    }).orElse(null));
+
     LOG.info("Loaded config {}", config);
 
     StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
@@ -40,7 +88,7 @@ public class Main {
 
     Vertx vertx = Vertx.vertx();
     Router router = Router.router(vertx);
-    Streamer streamer = new Streamer(vertx, config);
+    Streamer streamer = new Streamer(vertx, config, scheduler);
     TelemetryStore telemetryStore = new TelemetryStore();
 
     if (config.isLogRequestInfo()) {
@@ -73,7 +121,7 @@ public class Main {
         .handler(BodyHandler.create())
         .handler(new DirCommandHandler(streamer, config.getApiKey()));
 
-    new Chat(config, vertx, router).install();
+    new Chat(config, vertx, router, scheduler).install();
 
     router.post("/telemetry/fetch")
         .handler(BodyHandler.create())
@@ -103,7 +151,7 @@ public class Main {
 
     vertx.createHttpServer()
         .requestHandler(router)
-        .listen(config.getPort(), event -> {
+        .listen(Optional.ofNullable(ns.getInt("port")).orElse(config.getPort()), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
             try {
@@ -112,6 +160,7 @@ public class Main {
               LOG.error("Error starting scheduler", e);
               System.exit(2);
             }
+            Utils.triggerIfExists(scheduler, "start");
           } else {
             LOG.error("Failed to start up the server", event.cause());
           }

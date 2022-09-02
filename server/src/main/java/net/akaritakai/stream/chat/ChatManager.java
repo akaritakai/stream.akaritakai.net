@@ -22,6 +22,11 @@ import net.akaritakai.stream.models.chat.request.ChatJoinRequest;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
 import net.akaritakai.stream.models.chat.response.ChatMessageResponse;
 import net.akaritakai.stream.models.chat.response.ChatStatusResponse;
+import net.akaritakai.stream.scheduling.Utils;
+import org.quartz.JobDataMap;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +38,11 @@ public class ChatManager {
   private final AtomicReference<ChatHistory> _history = new AtomicReference<>(null);
   private final Set<ChatListener> _listeners = ConcurrentHashMap.newKeySet();
 
-  public ChatManager(Vertx vertx) {
+  private final Scheduler _scheduler;
+
+  public ChatManager(Vertx vertx, Scheduler scheduler) {
     _vertx = vertx;
+    _scheduler = scheduler;
   }
 
   public void sendMessage(ChatSendRequest request) throws ChatStateConflictException {
@@ -50,6 +58,11 @@ public class ChatManager {
           listener.onMessage(response);
         }
       }));
+      JobDataMap jobDataMap = new JobDataMap();
+      jobDataMap.put("type", String.valueOf(request.getMessageType()));
+      jobDataMap.put("nick", request.getNickname());
+      jobDataMap.put("message", request.getMessage());
+      Utils.triggerIfExists(_scheduler, "Message", "Chat", jobDataMap);
     }
   }
 
@@ -69,6 +82,7 @@ public class ChatManager {
           }
         }));
         promise.complete();
+        Utils.triggerIfExists(_scheduler, "disableChat", "Chat");
       }
     });
     return promise.future();
@@ -97,6 +111,7 @@ public class ChatManager {
           listener.onStatus(response);
         }));
         promise.complete();
+        Utils.triggerIfExists(_scheduler, "enableChat", "Chat");
       }
     });
     return promise.future();
@@ -125,6 +140,7 @@ public class ChatManager {
             listener.onStatus(response);
         }));
         promise.complete();
+        Utils.triggerIfExists(_scheduler, "clearChat", "Chat");
       }
     });
     return promise.future();

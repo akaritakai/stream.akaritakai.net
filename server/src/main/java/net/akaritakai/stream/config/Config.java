@@ -5,6 +5,7 @@ import java.net.URL;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
+import org.checkerframework.checker.units.qual.C;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +13,14 @@ import org.slf4j.LoggerFactory;
 public class Config {
   private static final Logger LOG = LoggerFactory.getLogger(Config.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  private static final Config INSTANCE = new Config();
+  private static Config INSTANCE;
   private final ConfigData _config;
 
-  private Config() {
+  private Config(URL resource) {
     try {
-      URL resource = Resources.getResource("config.json");
+      if (resource == null) {
+        resource = Resources.getResource("config.json");
+      }
       try (InputStream is = resource.openStream()) {
         _config = OBJECT_MAPPER.readValue(is, ConfigData.class);
       }
@@ -28,6 +31,13 @@ public class Config {
   }
 
   public static ConfigData getConfig() {
+    return getConfig(null);
+  }
+
+  public static synchronized ConfigData getConfig(URL url) {
+    if (INSTANCE == null) {
+      INSTANCE = new Config(url);
+    }
     return INSTANCE._config;
   }
 }

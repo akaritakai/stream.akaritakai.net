@@ -25,6 +25,11 @@ import net.akaritakai.stream.models.stream.request.StreamPauseRequest;
 import net.akaritakai.stream.models.stream.request.StreamResumeRequest;
 import net.akaritakai.stream.models.stream.request.StreamStartRequest;
 import net.akaritakai.stream.models.stream.request.StreamStopRequest;
+import net.akaritakai.stream.scheduling.Utils;
+import org.quartz.JobDataMap;
+import org.quartz.JobKey;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +43,11 @@ public class Streamer {
   private final AtomicReference<StreamState> _state = new AtomicReference<>(StreamState.OFFLINE);
   private final Set<StreamerListener> _listeners = ConcurrentHashMap.newKeySet();
 
-  public Streamer(Vertx vertx, ConfigData config) {
+  private final Scheduler _scheduler;
+
+  public Streamer(Vertx vertx, ConfigData config, Scheduler scheduler) {
     _vertx = vertx;
+    _scheduler = scheduler;
     if (config.isDevelopment()) {
       _client = new FakeAwsS3Client(vertx, config);
     } else {
@@ -300,8 +308,20 @@ public class Streamer {
   }
 
   public void setState(StreamState state) {
-    _state.set(state);
-    LOG.info("New state = {}", state);
+    StreamState old = _state.getAndSet(state);
+    if (old != state) {
+      LOG.info("New state = {}", state);
+      JobDataMap jobDataMap = new JobDataMap();
+      jobDataMap.put("status", state.getStatus());
+      jobDataMap.put("live", state.isLive());
+      jobDataMap.put("playlist", state.getPlaylist());
+      jobDataMap.put("mediaName", state.getMediaName());
+      jobDataMap.put("mediaDuration", state.getMediaDuration());
+      jobDataMap.put("startTime", state.getStartTime());
+      jobDataMap.put("endTime", state.getEndTime());
+      jobDataMap.put("seekTime", state.getSeekTime());
+      Utils.triggerIfExists(_scheduler, "Stream", String.valueOf(state), jobDataMap);
+    }
   }
 
   public Future<List<StreamEntry>> listStreams(String filter) {

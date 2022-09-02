@@ -8,6 +8,7 @@ import net.akaritakai.stream.handler.chat.ChatClearHandler;
 import net.akaritakai.stream.handler.chat.ChatClientHandler;
 import net.akaritakai.stream.handler.chat.ChatDisableHandler;
 import net.akaritakai.stream.handler.chat.ChatEnableHandler;
+import org.quartz.Scheduler;
 
 public class Chat {
     private final ConfigData config;
@@ -15,11 +16,11 @@ public class Chat {
     private final Router router;
     private final ChatManager chatManager;
 
-    public Chat(ConfigData config, Vertx vertx, Router router) {
+    public Chat(ConfigData config, Vertx vertx, Router router, Scheduler scheduler) {
         this.config = config;
         this.vertx = vertx;
         this.router = router;
-        this.chatManager = new ChatManager(vertx);
+        this.chatManager = new ChatManager(vertx, scheduler);
     }
 
     public void install() {

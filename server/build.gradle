@@ -28,6 +28,7 @@ dependencies {
     implementation 'io.vertx:vertx-core:4.3.3'
     implementation 'io.vertx:vertx-web:4.3.3'
     implementation 'io.vertx:vertx-web-client:4.3.3'
+    implementation 'net.sourceforge.argparse4j:argparse4j:0.2.0'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.slf4j:slf4j-api:1.7.36'
     implementation 'org.quartz-scheduler:quartz:2.3.2'

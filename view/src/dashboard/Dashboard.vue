@@ -82,6 +82,7 @@
               <tr><td>
                 <div class="form-group">
                 <input v-model="selectionFilter" type="text" class="form-control" id="prefix" placeholder="Filter/Search">
+                <br>
                 <select size="20" v-model="selectionSelected" class="form-control" width="100%">
                   <option v-for="entry in form.selection.streamNames" :key="entry.name" v-bind:value="entry.name">{{ entry.metadataName }}{{ entry.metadataLive ? " (live)" : "" }}</option>
                 </select></div>
@@ -89,23 +90,23 @@
               <td>
                 <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="true">
                   <div class="form-group">
-                    <label for="startName">Name</label>
+                    <label for="startName" class="form-label">Name</label>
                     <input v-model="form.start.name" type="text" class="form-control" id="startName" placeholder="The name of the media to start" required>
                   </div>
                   <div class="form-group">
-                    <label for="startSeekTime">Seek Time</label>
+                    <label for="startSeekTime" class="form-label">Seek Time</label>
                     <input v-model="form.start.seekTime" type="text" class="form-control" id="startSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
                   </div>
                   <div class="form-group">
-                    <label for="startStartAt">Start At</label>
+                    <label for="startStartAt" class="form-label">Start At</label>
                     <input v-model="form.start.startAt" type="text" class="form-control" id="startStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
                   </div>
                   <div class="form-group">
-                    <label for="startDelay">Delay</label>
+                    <label for="startDelay" class="form-label">Delay</label>
                     <input v-model="form.start.delay" type="text" class="form-control" id="startDelay" placeholder="(Optional) The delay in seconds to start">
                   </div>
                   <div class="form-group">
-                    <label for="startLive">Live</label>
+                    <label for="startLive" class="form-label">Live</label>
                     <input v-model="form.start.live" type="checkbox" class="form-control" id="startLive">
                   </div>
                   <div class="form-group">
@@ -137,15 +138,15 @@
                 </b-form>
                 <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="true">
                   <div class="form-group">
-                    <label for="resumeSeekTime">Seek Time</label>
+                    <label for="resumeSeekTime" class="form-label">Seek Time</label>
                     <input v-model="form.resume.seekTime" type="text" class="form-control" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
                   </div>
                   <div class="form-group">
-                    <label for="resumeStartAt">Start At</label>
+                    <label for="resumeStartAt" class="form-label">Start At</label>
                     <input v-model="form.resume.startAt" type="text" class="form-control" id="resumeStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
                   </div>
                   <div class="form-group">
-                    <label for="resumeDelay">Delay</label>
+                    <label for="resumeDelay" class="form-label">Delay</label>
                     <input v-model="form.resume.delay" type="text" class="form-control" id="resumeDelay" placeholder="(Optional) The delay in seconds to start">
                   </div>
                   <div class="form-group">
@@ -588,4 +589,16 @@
 <style lang="scss">
   @import 'node_modules/bootstrap/scss/bootstrap';
   @import 'node_modules/bootstrap-vue/src/index.scss';
+  .form-group {
+    text-align: left !important;
+    white-space: nowrap;
+  }
+  .form-control {
+    display: inline-block;
+  }
+  .form-label {
+    display: inline-block;
+    test-alight: right;
+    width: 80pt;
+  }
 </style>
