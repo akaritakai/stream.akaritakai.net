@@ -7,7 +7,7 @@
     </div>
     <div class="row">
       <div class="col text-center">
-        <b-form v-if="needApiKey" @submit.stop.prevent="true">
+        <b-form v-if="needApiKey" @submit.stop.prevent="alwaysTrue">
           <div class="form-group">
             <label for="apiKey">API Key</label>
             <input v-model="form.apiKey" type="text" class="form-control" id="apiKey" placeholder="API Key" required>
@@ -110,7 +110,7 @@
                 </div>
               </td>
               <td>
-                <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <label for="startName" class="form-label">Name</label>
                     <input v-model="form.start.name" type="text" class="form-control" id="startName" placeholder="The name of the media to start" required>
@@ -138,7 +138,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey && streamStartingSoon" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && streamStartingSoon" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="stopStream" v-if="!form.stop.inProgress">Stop Stream</button>
                     <button type="submit" class="btn btn-primary" v-if="form.stop.inProgress" disabled>
@@ -146,7 +146,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey && streamRunning" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && streamRunning" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="pauseStream" v-if="!form.pause.inProgress">Pause Stream</button>
                     <button type="submit" class="btn btn-primary" v-if="form.pause.inProgress" disabled>
@@ -158,7 +158,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <label for="resumeSeekTime" class="form-label">Seek Time</label>
                     <input v-model="form.resume.seekTime" type="text" class="form-control" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
@@ -182,7 +182,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey && enabled" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && enabled" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="disableChat" v-if="!form.disableChat.inProgress">Disable Chat</button>
                     <button type="submit" class="btn btn-primary" v-if="form.disableChat.inProgress" disabled>
@@ -190,7 +190,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey && !enabled" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey && !enabled" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="enableChat" v-if="!form.enableChat.inProgress">Enable Chat</button>
                     <button type="submit" class="btn btn-primary" v-if="form.enableChat.inProgress" disabled>
@@ -198,7 +198,7 @@
                     </button>
                   </div>
                 </b-form>
-                <b-form v-if="!needApiKey" @submit.stop.prevent="true">
+                <b-form v-if="!needApiKey" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="resetApiKey">Reset API Key</button>
                   </div>
@@ -459,6 +459,9 @@
       establishLogListener();
     },
     methods: {
+      alwaysTrue() {
+        return true;
+      },
       disableChat() {
         this.form.disableChat.inProgress = true;
         axios.post('/chat/disable', {

@@ -8,7 +8,8 @@ import java.util.Map;
 public class CheckAuthImpl implements CheckAuth {
 
     private final String _key;
-    private final Map<Class<?>, Method> _methodMap = new IdentityHashMap<>();
+    private final Map<Class<?>, Method> _getterMap = new IdentityHashMap<>();
+    private final Map<Class<?>, Method> _setterMap = new IdentityHashMap<>();
 
     public CheckAuthImpl(String key) {
         _key = key;
@@ -21,9 +22,9 @@ public class CheckAuthImpl implements CheckAuth {
         }
         try {
             Method method;
-            synchronized (_methodMap) {
-                if (_methodMap.containsKey(o.getClass())) {
-                    method = _methodMap.get(o.getClass());
+            synchronized (_getterMap) {
+                if (_getterMap.containsKey(o.getClass())) {
+                    method = _getterMap.get(o.getClass());
                 } else {
                     try {
                         method = o.getClass().getMethod("getKey");
@@ -33,12 +34,32 @@ public class CheckAuthImpl implements CheckAuth {
                     } catch (Exception e) {
                         method = null;
                     }
-                    _methodMap.put(o.getClass(), method);
+                    _getterMap.put(o.getClass(), method);
                 }
             }
             if (method != null) {
                 String key = String.valueOf(method.invoke(o));
-                return isAuthorizedKey(key);
+                if (isAuthorizedKey(key)) {
+                    synchronized (_setterMap) {
+                        if (_setterMap.containsKey(o.getClass())) {
+                            method = _setterMap.get(o.getClass());
+                        } else {
+                            try {
+                                method = o.getClass().getMethod("setKey", String.class);
+                                if (!Modifier.isPublic(method.getModifiers())) {
+                                    method = null;
+                                }
+                            } catch (Exception e) {
+                                method = null;
+                            }
+                            _setterMap.put(o.getClass(), method);
+                        }
+                    }
+                    if (method != null) {
+                        method.invoke(o, (String) null);
+                    }
+                    return true;
+                }
             }
         } catch (Exception ex) {
             // not auth;
