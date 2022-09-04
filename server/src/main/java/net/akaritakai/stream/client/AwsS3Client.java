@@ -1,10 +1,7 @@
 package net.akaritakai.stream.client;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -93,17 +90,26 @@ public class AwsS3Client {
             int pos = summary.getKey().indexOf('/', 6);
             if (pos > 6 && "/metadata.json".equals(summary.getKey().substring(pos))) {
               String name = summary.getKey().substring(6, pos);
-              if (matcher.test(name)) {
-                Promise<StreamEntry> res = Promise.promise();
-                getMetadata(name)
-                        .onSuccess(metadata -> res.complete(StreamEntry.builder()
-                                .name(name)
-                                .metadataName(metadata.getName())
-                                .metadataLive(metadata.isLive())
-                                .build()))
-                        .onFailure(res::fail);
-                list.add(res.future());
-              }
+              boolean nameMatch = matcher.test(name);
+              Promise<StreamEntry> res = Promise.promise();
+              getMetadata(name)
+                      .onSuccess(metadata -> {
+                        if (!nameMatch && !matcher.test(metadata.getName())) {
+                          res.complete(null);
+                        } else {
+                          res.complete(StreamEntry.builder()
+                                  .name(name)
+                                  .metadata(StreamMetadata.builder()
+                                          .name(metadata.getName())
+                                          .playlist(metadata.getPlaylist())
+                                          .duration(metadata.getDuration())
+                                          .live(metadata.isLive())
+                                          .build())
+                                  .build());
+                        }
+                      })
+                      .onFailure(res::fail);
+              list.add(res.future());
             }
           }
 
@@ -114,15 +120,13 @@ public class AwsS3Client {
               promise.complete(Collections.emptyList());
             } else {
               Iterator<Future<StreamEntry>> it = list.iterator();
-              it.next().onComplete(new Handler<AsyncResult<StreamEntry>>() {
+              it.next().onComplete(new Handler<>() {
                 List<StreamEntry> strings = new ArrayList<>();
                 @Override
                 public void handle(AsyncResult<StreamEntry> event) {
                   try {
-                    if (event.succeeded()) {
+                    if (event.succeeded() && event.result() != null) {
                       strings.add(event.result());
-                    } else {
-                      // log a maybe failire
                     }
                     if (it.hasNext()) {
                       it.next().onComplete(this);

@@ -83,9 +83,31 @@
                 <div class="form-group">
                 <input v-model="selectionFilter" type="text" class="form-control" id="prefix" placeholder="Filter/Search">
                 <br>
-                <select size="20" v-model="selectionSelected" class="form-control" width="100%">
-                  <option v-for="entry in form.selection.streamNames" :key="entry.name" v-bind:value="entry.name">{{ entry.metadataName }}{{ entry.metadataLive ? " (live)" : "" }}</option>
-                </select></div>
+                <b-table small head-variant="light"
+                     id="stream-entries"
+                     :busy.sync="form.selection.inProgress"
+                     primary-key="name"
+                     :fields="form.selection.fields"
+                     select-mode="single"
+                     :items="provideStreamEntries"
+                     responsive="sm" selectable
+                     @row-selected="onRowSelected">
+                  <template #table-busy>
+                    <div class="text-center text-danger my-2">
+                      <strong>Please wait...</strong>
+                    </div>
+                  </template>
+                  <template #cell(name)="data">
+                    {{ data.value }}
+                  </template>
+                  <template #cell(desc)="data">
+                    {{ data.item.metadata.name }}
+                  </template>
+                  <template #cell(duration)="data">
+                    {{ data.item.metadata.live ? "LIVE" : videojs.formatTime(data.item.metadata.duration / 1000, 1) }}
+                  </template>
+                </b-table>
+                </div>
               </td>
               <td>
                 <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="true">
@@ -260,8 +282,13 @@
           },
           selection: {
             filter: '',
-            selected: '',
-            streamNames: [],
+            fields: [
+              { key: 'name', label: 'Name' },
+              { key: 'desc', label: 'Description'},
+              { key: 'duration', label: 'Duration'}
+            ],
+            items: [],
+            selected: null,
             inProgress: false
           },
           info: {
@@ -269,14 +296,13 @@
           }
         },
         selectionFilter: '',
-        selectionSelected: '',
         result: {
           show: false,
           success: false,
           message: ''
         },
         quartz: {
-          jobFields: [
+          jobFields: []
         },
         telemetry: []
       }
@@ -363,15 +389,8 @@
     },
     watch: {
       selectionFilter(value) {
-        ;[this.form.selection.filter] = [value];
-        this.populateSelection();
-      },
-      selectionSelected(value) {
-        function findFunc(v, index, array) {
-          return v.name == value;
-        }
-        let entry = this.form.selection.streamNames.find(findFunc);
-        ;[this.form.selection.selected, this.form.start.name, this.form.start.live] = [value, value, entry.metadataLive];
+        this.form.selection.filter = value
+        this.$root.$emit('bv::refresh::table', 'stream-entries')
       }
     },
     mounted() {
@@ -438,8 +457,6 @@
         });
       }
       establishLogListener();
-
-      this.populateSelection();
     },
     methods: {
       disableChat() {
@@ -553,24 +570,27 @@
           this.form.stop.inProgress = false;
         })
       },
-      populateSelection() {
-        this.form.selection.inProgress = true;
-        this.form.selection.streamNames = [];
-        axios.post('/stream/dir', {
+      onRowSelected(items) {
+        this.form.selection.selected = items;
+        if (items.length == 1) {
+          let entry = items[0];
+          [this.form.start.name, this.form.start.live] = [ entry.name, entry.metadata.live ]
+        }
+      },
+      provideStreamEntries(ctx) {
+        return axios.post('/stream/dir', {
           key: this.apiKey,
           filter: this.form.selection.filter
         }).then(response => {
-          this.form.selection.inProgress = false;
-          response.data.entries.forEach(entry => {
-            this.form.selection.streamNames.push(entry)
-          });
+          const entries = response.data.entries;
+          return(entries)
         }).catch(error => {
           if (error.response) {
             this.showResult(false, error.response.data);
           } else {
             this.showResult(false, error.message);
           }
-          this.form.selection.inProgress = false;
+          return([])
         })
       },
       showResult(success, message) {

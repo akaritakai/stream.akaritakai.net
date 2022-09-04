@@ -28,7 +28,7 @@ public class DirCommandHandler extends AbstractHandler<StreamDirRequest> {
     protected void handleAuthorized(StreamDirRequest request, HttpServerResponse response) {
         _streamer.listStreams(request.getFilter()).onSuccess(list -> {
             try {
-                list.sort(Comparator.comparing(StreamEntry::getMetadataName));
+                list.sort(Comparator.comparing(StreamEntry::getName));
                 StreamDirResponse dirResponse = StreamDirResponse.builder().entries(list).build();
                 String responseAsString = OBJECT_MAPPER.writeValueAsString(dirResponse);
                 handleSuccess(responseAsString, "application/json", response);

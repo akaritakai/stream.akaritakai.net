@@ -15,9 +15,7 @@ public class StreamEntry {
     String name;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    String metadataName;
-
-    boolean metadataLive;
+    StreamMetadata metadata;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class StreamEntryBuilder {

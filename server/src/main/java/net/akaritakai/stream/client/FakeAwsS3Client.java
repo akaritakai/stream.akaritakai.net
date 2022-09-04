@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import io.vertx.core.*;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.models.stream.StreamEntry;
+import net.akaritakai.stream.models.stream.StreamMetadata;
 
 
 public class FakeAwsS3Client extends AwsS3Client {
@@ -59,8 +60,12 @@ public class FakeAwsS3Client extends AwsS3Client {
                   getMetadata(name)
                           .onSuccess(meta -> p.complete(StreamEntry.builder()
                                   .name(name)
-                                  .metadataName(meta.getName())
-                                  .metadataLive(meta.isLive())
+                                  .metadata(StreamMetadata.builder()
+                                          .name(meta.getName())
+                                          .playlist(meta.getPlaylist())
+                                          .duration(meta.getDuration())
+                                          .live(meta.isLive())
+                                          .build())
                                   .build()))
                           .onFailure(p::fail);
                   return p.future();
