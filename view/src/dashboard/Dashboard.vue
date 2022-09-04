@@ -77,13 +77,13 @@
             </table>
           </b-tab>
           <b-tab title="Actions">
-            <table class="table">
+            <table class="table max100w">
               <tbody>
-              <tr><td>
+              <tr><td width="50%">
                 <div class="form-group">
                 <input v-model="selectionFilter" type="text" class="form-control" id="prefix" placeholder="Filter/Search">
                 <br>
-                <b-table small head-variant="light"
+                <b-table class="scroll-x max50w" small head-variant="light"
                      id="stream-entries"
                      :busy.sync="form.selection.inProgress"
                      primary-key="name"
@@ -109,7 +109,7 @@
                 </b-table>
                 </div>
               </td>
-              <td>
+              <td width="50%">
                 <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <label for="startName" class="form-label">Name</label>
@@ -650,6 +650,15 @@
     width: 80pt;
   }
   .monospace {
-    font-family:Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+    font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace;
+  }
+  .scroll-x {
+    overflow-x: scroll;
+  }
+  .max100w {
+    max-width: calc(100vw - 50pt);
+  }
+  .max50w {
+    max-width: calc(50vw - 100pt);
   }
 </style>

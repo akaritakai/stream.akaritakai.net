@@ -79,72 +79,65 @@ public class AwsS3Client {
     return promise.future();
   }
 
-  public Future<List<StreamEntry>> listMetadataNames(Predicate<String> matcher) {
+  protected static StreamEntry makeStreamEntry(String name, StreamMetadata metadata) {
+    return StreamEntry.builder()
+            .name(name)
+            .metadata(StreamMetadata.builder()
+                    .name(metadata.getName())
+                    .playlist(metadata.getPlaylist())
+                    .duration(metadata.getDuration())
+                    .live(metadata.isLive())
+                    .build())
+            .build();
+  }
+
+  public Future<List<StreamEntry>> listMetadataNames(Predicate<String> matcher, int limit) {
     Promise<List<StreamEntry>> promise = Promise.promise();
     _vertx.runOnContext(event -> {
-      try {
-        List<Future<StreamEntry>> list = new ArrayList<>();
+      List<StreamEntry> list = new ArrayList<>(limit);
+      class Processor {
         ObjectListing objectListing = _client.listObjects(_bucketName, "media/");
-        for (;;) {
-          for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
+        Iterator<S3ObjectSummary> it = objectListing.getObjectSummaries().iterator();
+
+        void processNext() {
+          while (it.hasNext()) {
+            S3ObjectSummary summary = it.next();
             int pos = summary.getKey().indexOf('/', 6);
             if (pos > 6 && "/metadata.json".equals(summary.getKey().substring(pos))) {
               String name = summary.getKey().substring(6, pos);
               boolean nameMatch = matcher.test(name);
-              Promise<StreamEntry> res = Promise.promise();
               getMetadata(name)
                       .onSuccess(metadata -> {
                         if (!nameMatch && !matcher.test(metadata.getName())) {
-                          res.complete(null);
+                          processNext();
                         } else {
-                          res.complete(StreamEntry.builder()
-                                  .name(name)
-                                  .metadata(StreamMetadata.builder()
-                                          .name(metadata.getName())
-                                          .playlist(metadata.getPlaylist())
-                                          .duration(metadata.getDuration())
-                                          .live(metadata.isLive())
-                                          .build())
-                                  .build());
+                          list.add(makeStreamEntry(name, metadata));
+                          if (list.size() < limit) {
+                            processNext();
+                          } else {
+                            promise.complete(list);
+                          }
                         }
                       })
-                      .onFailure(res::fail);
-              list.add(res.future());
+                      .onFailure(promise::fail);
+              return;
             }
           }
-
           if (objectListing.isTruncated()) {
             objectListing = _client.listNextBatchOfObjects(objectListing);
-          } else {
-            if (list.isEmpty()) {
-              promise.complete(Collections.emptyList());
-            } else {
-              Iterator<Future<StreamEntry>> it = list.iterator();
-              it.next().onComplete(new Handler<>() {
-                List<StreamEntry> strings = new ArrayList<>();
-                @Override
-                public void handle(AsyncResult<StreamEntry> event) {
-                  try {
-                    if (event.succeeded() && event.result() != null) {
-                      strings.add(event.result());
-                    }
-                    if (it.hasNext()) {
-                      it.next().onComplete(this);
-                    } else {
-                      promise.complete(strings);
-                    }
-                  } catch (Exception e) {
-                    promise.fail(e);
-                  }
-                }
-              });
-            }
+            it = objectListing.getObjectSummaries().iterator();
+            processNext();
+            return;
           }
+          promise.complete(list);
         }
-      } catch (Exception e) {
-        promise.fail(e);
       }
+      new Processor().processNext();
     });
     return promise.future();
+  }
+
+  public Future<List<StreamEntry>> listMetadataNames(Predicate<String> matcher) {
+    return listMetadataNames(matcher, 10);
   }
 }
