@@ -1,6 +1,6 @@
 <template>
   <div id="chat-input" v-if="enabled && nick && nick.length > 0">
-    <div class="chat-input-area">
+    <div class="chat-input-area" ref="inputArea">
       <!--suppress HtmlFormInputWithoutLabel -->
       <textarea
         ref="textArea"
@@ -9,6 +9,17 @@
         placeholder="Send a message"
         v-bind:rows="textAreaRows"
         @keydown.enter.exact.prevent="sendMessage"/>
+      <svg class="emojiButton" viewBox="0 0 72 72" ref="pickerIcon" v-on:mouseover="emojiMouseOver">
+        <g id="color">
+          <circle cx="36.0001" cy="36" r="22.9999" fill="#FCEA2B"/>
+        </g>
+        <g id="line">
+          <circle cx="36" cy="36" r="23" fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+          <path fill="none" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M45.8149,44.9293 c-2.8995,1.6362-6.2482,2.5699-9.8149,2.5699s-6.9153-0.9336-9.8149-2.5699"/>
+          <path d="M30,31c0,1.6568-1.3448,3-3,3c-1.6553,0-3-1.3433-3-3c0-1.6552,1.3447-3,3-3C28.6552,28,30,29.3448,30,31"/>
+          <path d="M48,31c0,1.6568-1.3447,3-3,3s-3-1.3433-3-3c0-1.6552,1.3447-3,3-3S48,29.3448,48,31"/>
+        </g>
+      </svg>
       <svg class="icon" viewBox="0 0 20 20" @click="sendMessage">
         <g><path d="M11,8.3L2.6,8.8C2.4,8.8,2.3,8.9,2.3,9l-1.2,4.1c-0.2,0.5,0,1.1,0.4,1.5C1.7,14.9,2,15,2.4,15c0.2,0,0.4,
                   0,0.6-0.1l11.2-5.6 C14.8,9,15.1,8.4,15,7.8c-0.1-0.4-0.4-0.8-0.8-1L3,1.1C2.5,0.9,1.9,1,1.5,1.3C1,1.7,
@@ -19,15 +30,74 @@
 </template>
 
 <script>
+  require("../../node_modules/rm-emoji-picker/dist/emojipicker.css");
+  import sheet_apple from "../../node_modules/rm-emoji-picker/sheets/sheet_apple_64_indexed_128.png";
+  import sheet_google from "../../node_modules/rm-emoji-picker/sheets/sheet_google_64_indexed_128.png";
+  import sheet_twitter from "../../node_modules/rm-emoji-picker/sheets/sheet_twitter_64_indexed_128.png";
+
   import Vue from 'vue';
   import {mapState} from "vuex";
+  import EmojiPicker from "../../node_modules/rm-emoji-picker/dist/index.js";
+  const picker = new EmojiPicker({
+    sheets: {
+      apple   : sheet_apple,
+      google  : sheet_google,
+      twitter : sheet_twitter
+    },
+    positioning: function(tip) {
+      if (typeof(tip.element_rect) != 'undefined') {
+        let coordinate = {
+          top: tip.centered_coordinate.top - (tip.element_rect.height + tip.tooltip_height) / 2,
+          left: tip.centered_coordinate.left
+        };
+        tip._applyPosition(coordinate)('TooltipAbove');
+      } else {
+        tip.above();
+      }
+    },
+    search_icon : '🔍',
+    categories: [
+      {
+        title: "People",
+        icon : '😀'
+      },
+      {
+        title: "Nature",
+        icon : '🌳'
+      },
+      {
+        title: "Foods",
+        icon : '🍉'
+      },
+      {
+        title: "Activity",
+        icon : '⚽'
+      },
+      {
+        title: "Places",
+        icon : '🧭'
+      },
+      {
+        title: "Symbols",
+        icon : '➗'
+      },
+      {
+        title: "Flags",
+        icon : '🏳'
+      }
+    ]
+  });
 
   export default {
     name: 'chat-input',
+    components: {
+      EmojiPicker
+    },
     data() {
       return {
         message: '',
-        textAreaRows: 1
+        textAreaRows: 1,
+        pickerInstalled: false
       }
     },
     computed: {
@@ -43,6 +113,20 @@
       },
       scrollBarIsPresent() {
         return this.$refs.textArea.clientHeight < this.$refs.textArea.scrollHeight;
+      },
+      emojiMouseOver(event) {
+        if (this.pickerInstalled) {
+          return;
+        }
+        this.pickerInstalled = true;
+        const target = event.target;
+        const input = this.$refs.textArea;
+        const comp = this.$refs.inputArea;
+        picker.listenOn(target, comp, input);
+        let self = this;
+        picker._callback = function(emoji, cat, node) {
+          self.message = input.value;
+        };
       }
     },
     watch: {
@@ -147,6 +231,13 @@
         &:hover {
           color: rgb(145, 71, 255);
         }
+      }
+      .emojiButton {
+        height: 35px;
+        width: 20px;
+        left: -10px;
+        bottom: 5px;
+        position: absolute;
       }
     }
   }

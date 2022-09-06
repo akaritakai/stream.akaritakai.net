@@ -8,13 +8,22 @@
         <span><a class="chat-text-line-link" v-bind:href="part.content" rel="nofollow noopener noreferrer" target="_blank">{{ part.content }}</a></span>
       </template>
       <template v-if="part.type === 'plaintext'">
-        <span>{{ part.content }}</span>
+        <span v-html="replace_colons(part.content)"></span>
       </template>
     </template>
   </div>
 </template>
 
 <script>
+  import sheetsrc from "../../assets/emoji-data/sheet_apple_64.png";
+  //import {emoticon} from 'emoticon';
+  var EmojiConvertor = require('emoji-js');
+  var emoji = new EmojiConvertor();
+  emoji.replace_mode = 'css';
+  emoji.use_sheet = true;
+  emoji.img_sets.apple.sheet = sheetsrc;
+  emoji.allow_caps = true;
+
   export default {
     name: 'chat-text-line',
     data() {
@@ -63,7 +72,6 @@
     computed: {
       time() {
         const timestamp = this.timestamp;
-        console.log("time=" + timestamp);
         if (isNaN(timestamp)) {
           return "--:--";
         }
@@ -101,6 +109,164 @@
         });
 
         return parts;
+      }
+    },
+    methods: {
+      replace_colons(value) {
+        var ctl = document.createElement("textarea");
+        ctl.innerText = value;
+        return emoji.replace_colons(ctl.innerHTML);
+        var before = emoji.replace_colons(ctl.innerHTML);
+        var after = before
+                    .replaceAll('o/'         , '👋')
+                    .replaceAll('&lt;/3'        , '💔')
+                    .replaceAll('&lt;3'         , '💗')
+                    .replaceAll('8-D'        , '😁')
+                    .replaceAll('8D'         , '😁')
+                    .replaceAll(':-D'        , '😁')
+                    .replaceAll('=-3'        , '😁')
+                    .replaceAll('=-D'        , '😁')
+                    .replaceAll('=3'         , '😁')
+                    .replaceAll('=D'         , '😁')
+                    .replaceAll('B^D'        , '😁')
+                    .replaceAll('X-D'        , '😁')
+                    .replaceAll('XD'         , '😁')
+                    .replaceAll('x-D'        , '😁')
+                    .replaceAll('xD'         , '😁')
+                    .replaceAll(':\')'       , '😂')
+                    .replaceAll(':\'-)'      , '😂')
+                    .replaceAll(':-))'       , '😃')
+                    .replaceAll('8)'         , '😄')
+                    .replaceAll(':)'         , '😄')
+                    .replaceAll(':-)'        , '😄')
+                    .replaceAll(':3'         , '😄')
+                    .replaceAll(':D'         , '😄')
+                    .replaceAll(':]'         , '😄')
+                    .replaceAll(':^)'        , '😄')
+                    .replaceAll(':c)'        , '😄')
+                    .replaceAll(':o)'        , '😄')
+                    .replaceAll(':}'         , '😄')
+                    .replaceAll(':っ)'        , '😄')
+                    .replaceAll('=)'         , '😄')
+                    .replaceAll('=]'         , '😄')
+                    .replaceAll('0:)'        , '😇')
+                    .replaceAll('0:-)'       , '😇')
+                    .replaceAll('0:-3'       , '😇')
+                    .replaceAll('0:3'        , '😇')
+                    .replaceAll('0;^)'       , '😇')
+                    .replaceAll('O:-)'       , '😇')
+                    .replaceAll('3:)'        , '😈')
+                    .replaceAll('3:-)'       , '😈')
+                    .replaceAll('}:)'        , '😈')
+                    .replaceAll('}:-)'       , '😈')
+                    .replaceAll('*)'         , '😉')
+                    .replaceAll('*-)'        , '😉')
+                    .replaceAll(':-,'        , '😉')
+                    .replaceAll(';)'         , '😉')
+                    .replaceAll(';-)'        , '😉')
+                    .replaceAll(';-]'        , '😉')
+                    .replaceAll(';D'         , '😉')
+                    .replaceAll(';]'         , '😉')
+                    .replaceAll(';^)'        , '😉')
+                    .replaceAll(':-|'        , '😐')
+                    .replaceAll(':|'         , '😐')
+                    .replaceAll(':('         , '😒')
+                    .replaceAll(':-('        , '😒')
+                    .replaceAll(':-<'        , '😒')
+                    .replaceAll(':-['        , '😒')
+                    .replaceAll(':-c'        , '😒')
+                    .replaceAll(':<'         , '😒')
+                    .replaceAll(':['         , '😒')
+                    .replaceAll(':c'         , '😒')
+                    .replaceAll(':{'         , '😒')
+                    .replaceAll(':っC'        , '😒')
+                    .replaceAll('%)'         , '😖')
+                    .replaceAll('%-)'        , '😖')
+                    .replaceAll(':-P'        , '😜')
+                    .replaceAll(':-b'        , '😜')
+                    .replaceAll(':-p'        , '😜')
+                    .replaceAll(':-Þ'        , '😜')
+                    .replaceAll(':-þ'        , '😜')
+                    .replaceAll(':P'         , '😜')
+                    .replaceAll(':b'         , '😜')
+                    .replaceAll(':p'         , '😜')
+                    .replaceAll(':Þ'         , '😜')
+                    .replaceAll(':þ'         , '😜')
+                    .replaceAll(';('         , '😜')
+                    .replaceAll('=p'         , '😜')
+                    .replaceAll('X-P'        , '😜')
+                    .replaceAll('XP'         , '😜')
+                    .replaceAll('d:'         , '😜')
+                    .replaceAll('x-p'        , '😜')
+                    .replaceAll('xp'         , '😜')
+                    .replaceAll(':-||'       , '😠')
+                    .replaceAll(':@'         , '😠')
+                    .replaceAll(':-.'        , '😡')
+                    .replaceAll(':-/'        , '😡')
+                    .replaceAll(':/'         , '😡')
+                    .replaceAll(':L'         , '😡')
+                    .replaceAll(':S'         , '😡')
+                    .replaceAll(':\\'        , '😡')
+                    .replaceAll('=/'         , '😡')
+                    .replaceAll('=L'         , '😡')
+                    .replaceAll('=\\'        , '😡')
+                    .replaceAll(':\'('       , '😢')
+                    .replaceAll(':\'-('      , '😢')
+                    .replaceAll('^5'         , '😤')
+                    .replaceAll('^&lt;_&lt;'       , '😤')
+                    .replaceAll('o/\\o'      , '😤')
+                    .replaceAll('|-O'        , '😫')
+                    .replaceAll('|;-)'       , '😫')
+                    .replaceAll(':###..'     , '😰')
+                    .replaceAll(':-###..'    , '😰')
+                    .replaceAll('D-\':'      , '😱')
+                    .replaceAll('D8'         , '😱')
+                    .replaceAll('D:'         , '😱')
+                    .replaceAll('D:&lt;'        , '😱')
+                    .replaceAll('D;'         , '😱')
+                    .replaceAll('D='         , '😱')
+                    .replaceAll('DX'         , '😱')
+                    .replaceAll('v.v'        , '😱')
+                    .replaceAll('8-0'        , '😲')
+                    .replaceAll(':-O'        , '😲')
+                    .replaceAll(':-o'        , '😲')
+                    .replaceAll(':O'         , '😲')
+                    .replaceAll(':o'         , '😲')
+                    .replaceAll('O-O'        , '😲')
+                    .replaceAll('O_O'        , '😲')
+                    .replaceAll('O_o'        , '😲')
+                    .replaceAll('o-o'        , '😲')
+                    .replaceAll('o_O'        , '😲')
+                    .replaceAll('o_o'        , '😲')
+                    .replaceAll(':$'         , '😳')
+                    .replaceAll('#-)'        , '😵')
+                    .replaceAll(':#'         , '😶')
+                    .replaceAll(':&amp;'         , '😶')
+                    .replaceAll(':-#'        , '😶')
+                    .replaceAll(':-&amp;'        , '😶')
+                    .replaceAll(':-X'        , '😶')
+                    .replaceAll(':X'         , '😶')
+                    .replaceAll(':-J'        , '😼')
+                    .replaceAll(':*'         , '😽')
+                    .replaceAll(':^*'        , '😽')
+                    .replaceAll('ಠ_ಠ'        , '🙅')
+                    .replaceAll('*\\0/*'     , '🙆')
+                    .replaceAll('\\o/'       , '🙆')
+                    .replaceAll(':&gt;'         , '😄')
+                    .replaceAll('&gt;.&lt;'        , '😡')
+                    .replaceAll('&gt;:('        , '😠')
+                    .replaceAll('&gt;:)'        , '😈')
+                    .replaceAll('&gt;:-)'       , '😈')
+                    .replaceAll('&gt;:/'        , '😡')
+                    .replaceAll('&gt;:O'        , '😲')
+                    .replaceAll('&gt;:P'        , '😜')
+                    .replaceAll('&gt;:['        , '😒')
+                    .replaceAll('&gt;:\\'       , '😡')
+                    .replaceAll('&gt;;)'        , '😈')
+                    .replaceAll('&gt;_&gt;^'       , '😤');
+        if (before != after) {
+          console.log(after);
+        }
       }
     }
   }

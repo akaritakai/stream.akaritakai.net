@@ -113,19 +113,19 @@
                 <b-form v-if="!needApiKey && streamStopped" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <label for="startName" class="form-label">Name</label>
-                    <input v-model="form.start.name" type="text" class="form-control" id="startName" placeholder="The name of the media to start" required>
+                    <input v-model="form.start.name" type="text" class="form-control max50w" id="startName" placeholder="The name of the media to start" required>
                   </div>
                   <div class="form-group">
                     <label for="startSeekTime" class="form-label">Seek Time</label>
-                    <input v-model="form.start.seekTime" type="text" class="form-control" id="startSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
+                    <input v-model="form.start.seekTime" type="text" class="form-control max50w" id="startSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
                   </div>
                   <div class="form-group">
                     <label for="startStartAt" class="form-label">Start At</label>
-                    <input v-model="form.start.startAt" type="text" class="form-control" id="startStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
+                    <input v-model="form.start.startAt" type="text" class="form-control max50w" id="startStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
                   </div>
                   <div class="form-group">
                     <label for="startDelay" class="form-label">Delay</label>
-                    <input v-model="form.start.delay" type="text" class="form-control" id="startDelay" placeholder="(Optional) The delay in seconds to start">
+                    <input v-model="form.start.delay" type="text" class="form-control max50w" id="startDelay" placeholder="(Optional) The delay in seconds to start">
                   </div>
                   <div class="form-group">
                     <label for="startLive" class="form-label">Live</label>
@@ -161,15 +161,15 @@
                 <b-form v-if="!needApiKey && streamPaused" @submit.stop.prevent="alwaysTrue">
                   <div class="form-group">
                     <label for="resumeSeekTime" class="form-label">Seek Time</label>
-                    <input v-model="form.resume.seekTime" type="text" class="form-control" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
+                    <input v-model="form.resume.seekTime" type="text" class="form-control max50w" id="resumeSeekTime" placeholder="(Optional) The time to seek to in the media as seconds, [mm:ss], or [hh:mm:ss]">
                   </div>
                   <div class="form-group">
                     <label for="resumeStartAt" class="form-label">Start At</label>
-                    <input v-model="form.resume.startAt" type="text" class="form-control" id="resumeStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
+                    <input v-model="form.resume.startAt" type="text" class="form-control max50w" id="resumeStartAt" placeholder="(Optional) The time to start at as [hh:mm a] (e.g. '03:45 pm')">
                   </div>
                   <div class="form-group">
                     <label for="resumeDelay" class="form-label">Delay</label>
-                    <input v-model="form.resume.delay" type="text" class="form-control" id="resumeDelay" placeholder="(Optional) The delay in seconds to start">
+                    <input v-model="form.resume.delay" type="text" class="form-control max50w" id="resumeDelay" placeholder="(Optional) The delay in seconds to start">
                   </div>
                   <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="resumeStream" v-if="!form.resume.inProgress">Resume Stream</button>
