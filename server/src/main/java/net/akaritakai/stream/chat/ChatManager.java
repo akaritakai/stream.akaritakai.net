@@ -67,7 +67,8 @@ public class ChatManager {
   }
 
   public Future<Void> disableChat(ChatDisableRequest request) {
-    LOG.info("Got ChatDisableRequest = {}", request);
+    LOG.info("Got ChatDisableRequest");
+    assert request != null;
     Promise<Void> promise = Promise.promise();
     _vertx.runOnContext(disableChatEvent -> {
       ChatHistory currentHistory = _history.get();
@@ -89,7 +90,8 @@ public class ChatManager {
   }
 
   public Future<Void> enableChat(ChatEnableRequest request) {
-    LOG.info("Got ChatEnableRequest = {}", request);
+    LOG.info("Got ChatEnableRequest");
+    assert request != null;
     Promise<Void> promise = Promise.promise();
     _vertx.runOnContext(disableChatEvent -> {
       ChatHistory currentHistory = _history.get();
@@ -108,7 +110,7 @@ public class ChatManager {
             .build();
         _listeners.forEach(listener -> _vertx.runOnContext(event -> {
           if (Objects.equals(newHistory, _history.get()))
-          listener.onStatus(response);
+            listener.onStatus(response);
         }));
         promise.complete();
         Utils.triggerIfExists(_scheduler, "enableChat", "Chat");
@@ -118,7 +120,8 @@ public class ChatManager {
   }
 
   public Future<Void> clearChat(ChatClearRequest request) {
-    LOG.info("Got ChatClearRequest = {}", request);
+    LOG.info("Got ChatClearRequest");
+    assert request != null;
     Promise<Void> promise = Promise.promise();
     _vertx.runOnContext(disableChatEvent -> {
       ChatHistory currentHistory = _history.get();

@@ -38,6 +38,10 @@ import org.sqlite.JDBC;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -98,6 +102,15 @@ public class Main {
     schedulerProperties.setProperty("org.quartz.jobStore.useProperties", "true");
     schedulerProperties.setProperty("org.quartz.dataSource.myDS.driver", JDBC.class.getName());
     schedulerProperties.setProperty("org.quartz.dataSource.myDS.URL", "jdbc:sqlite:scheduler.db");
+
+    try (Connection connection = DriverManager.getConnection(schedulerProperties.getProperty("org.quartz.dataSource.myDS.URL"));
+         ResultSet rs = connection.createStatement().executeQuery("SELECT COUNT(*) FROM QRTZ_LOCKS")) {
+      LOG.info("Database already initialized");
+    } catch (SQLException ex) {
+      LOG.warn("Attempting to reinitialize the database");
+      InitDB.main(new String[0]);
+    }
+
     schedulerFactory.initialize(schedulerProperties);
     Scheduler scheduler = schedulerFactory.getScheduler();
 
