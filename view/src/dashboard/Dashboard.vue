@@ -209,11 +209,15 @@
          </b-tab>
           <b-tab title="Scheduling">
             <b-tabs>
+              <b-tab title="Status">
+              </b-tab>
               <b-tab title="Variables">
               </b-tab>
               <b-tab title="Jobs">
               </b-tab>
               <b-tab title="Triggers">
+              </b-tab>
+              <b-tab title="Calendars">
               </b-tab>
             </b-tabs>
           </b-tab>

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Value;
 import net.akaritakai.stream.json.InstantToNumberConverter;
+import net.akaritakai.stream.json.NumberToInstantConverter;
 
 import java.time.Instant;
 import java.util.Map;
@@ -30,18 +31,23 @@ public class TriggerEntry {
     boolean mayFireAgain;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant startTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant endTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant nextFireTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant previousFireTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant finalFireTime;
 
     int misfireInstruction;
