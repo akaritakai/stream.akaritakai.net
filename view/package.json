@@ -20,6 +20,7 @@
     "popper.js": "^1.16.1",
     "rm-emoji-picker": "^1.0.0",
     "simplebar-vue": "^1.4.0",
+    "smile2emoji": "^3.1.1",
     "video.js": "^7.19.2",
     "vue": "^2.6.11",
     "vuex": "^3.2.0",
