@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 public class ChatClientHandler implements Handler<RoutingContext>, ChatListener {
   private static final Logger LOG = LoggerFactory.getLogger(ChatClientHandler.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final int MAX_MESSAGE_LENGTH = 32768;
 
   private final Vertx _vertx;
   private final ChatManager _chat;
@@ -96,7 +97,8 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
     Validate.isTrue(request.getNickname().matches("^[A-Za-z0-9_]*$"), "nickname must use the character set: [A-Za-z0-9_]");
     Validate.notNull(request.getMessage(), "message cannot be null");
     Validate.notEmpty(request.getMessage(), "message cannot be empty");
-    Validate.isTrue(request.getMessage().length() <= 500, "message must not be more than 400 characters");
+    Validate.isTrue(request.getMessage().length() <= MAX_MESSAGE_LENGTH,
+            "message must not be more than " + MAX_MESSAGE_LENGTH + " characters");
   }
 
   @Override

@@ -1,4 +1,4 @@
-const MESSAGE_CAPACITY = 500;
+const MESSAGE_CAPACITY = 32768;
 
 const state = {
   opened: true,

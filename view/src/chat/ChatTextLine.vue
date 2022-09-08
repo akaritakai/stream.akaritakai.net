@@ -7,8 +7,11 @@
       <template v-if="part.type === 'link'">
         <span><a class="chat-text-line-link" v-bind:href="part.content" rel="nofollow noopener noreferrer" target="_blank">{{ part.content }}</a></span>
       </template>
+      <template v-if="part.type === 'img'">
+        <span><img class="chat-text-line-link" v-bind:src="part.content" height="20" width="20"/></span>
+      </template>
       <template v-if="part.type === 'plaintext'">
-        <span v-html="replace_colons(part.content)"></span>
+        <span class="chat-text-span" v-html="format_text(part.content)"></span>
       </template>
     </template>
   </div>
@@ -87,8 +90,8 @@
         const tokens = this.message.split(/(\s+)/);
         tokens.forEach(token => {
           let validUrl = false;
-          if (token.startsWith("http://") || token.startsWith("https://")) {
-            try {
+          try {
+            if (token.startsWith("http://") || token.startsWith("https://")) {
               const url = new URL(token);
               if (url.protocol === 'http:' || url.protocol === 'https:') {
                 validUrl = true;
@@ -97,8 +100,15 @@
                   content: token
                 });
               }
-            } catch (_) {
+            } else if (token.startsWith("[data:image/") && token.endsWith("]")) {
+              const url = new URL(token.substring(1, token.length-1));
+              validUrl = true;
+              parts.push({
+                type: "img",
+                content: url
+              });
             }
+          } catch (_) {
           }
           if (!validUrl) {
             parts.push({
@@ -112,7 +122,10 @@
       }
     },
     methods: {
-      replace_colons(value) {
+      format_text(value) {
+        if (value.length > 100) {
+          value = value.substring(0, 100) + "...";
+        }
         var ctl = document.createElement("textarea");
         ctl.innerText = checkText(value);
         return emoji.replace_colons(ctl.innerHTML);
@@ -154,6 +167,11 @@
     &:visited {
       color: olive;
     }
+  }
+
+  chat-text-span {
+    white-space: nowrap;
+    word-break: keep-all;
   }
 
   @font-face {

@@ -5,7 +5,7 @@
       <textarea
         ref="textArea"
         v-model="message"
-        maxlength="500"
+        maxlength="32768"
         placeholder="Send a message"
         v-bind:rows="textAreaRows"
         @keydown.enter.exact.prevent="sendMessage"/>
