@@ -8,7 +8,7 @@
         <span><a class="chat-text-line-link" v-bind:href="part.content" rel="nofollow noopener noreferrer" target="_blank">{{ part.content }}</a></span>
       </template>
       <template v-if="part.type === 'img'">
-        <span><img class="chat-text-line-link" v-bind:src="part.content" height="20" width="20"/></span>
+        <span><img class="chat-text-line-link" v-bind:src="part.content" height="28" width="28"/></span>
       </template>
       <template v-if="part.type === 'plaintext'">
         <span class="chat-text-span" v-html="format_text(part.content)"></span>

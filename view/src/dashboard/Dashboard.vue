@@ -81,9 +81,10 @@
               <tbody>
               <tr><td width="50%">
                 <div class="form-group">
-                <input v-model="selectionFilter" type="text" class="form-control" id="prefix" placeholder="Filter/Search">
+                <input v-model="selectionFilter" type="text" class="form-control" id="prefix"
+                     placeholder="Filter/Search - max 10 results">
                 <br>
-                <b-table class="scroll-x max50w" small head-variant="light"
+                <b-table class="scroll-x max50wt" small head-variant="light"
                      id="stream-entries"
                      :busy.sync="form.selection.inProgress"
                      primary-key="name"
@@ -104,7 +105,7 @@
                     {{ data.item.metadata.name }}
                   </template>
                   <template #cell(duration)="data">
-                    {{ data.item.metadata.live ? "LIVE" : videojs.formatTime(data.item.metadata.duration / 1000, 1) }}
+                    {{ liveOrDuration(data.item.metadata) }}
                   </template>
                 </b-table>
                 </div>
@@ -246,7 +247,7 @@
   import {mapGetters, mapState} from 'vuex';
   import {BootstrapVue, AlertPlugin} from 'bootstrap-vue';
   import axios from 'axios';
-  import videojs from 'video.js';
+  import videojs from 'video.js/core';
   import moment from 'moment';
 
   Vue.use(BootstrapVue);
@@ -633,6 +634,9 @@
           dt.add(1, 'days');
         }
         return dt.valueOf();
+      },
+      liveOrDuration(metadata) {
+        return metadata.live ? "LIVE" : videojs.formatTime(metadata.duration / 1000, 1)
       }
     }
   };
@@ -664,5 +668,8 @@
   }
   .max50w {
     max-width: calc(50vw - 100pt);
+  }
+  .max50wt {
+    max-width: calc(50vw - 25pt);
   }
 </style>
