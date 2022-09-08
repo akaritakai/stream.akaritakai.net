@@ -62,6 +62,10 @@ public class Main {
             .help("Service TCP port number")
             .type(Integer.class)
             .metavar("PORT");
+    argumentParser.addArgument("--apiKey")
+            .dest("apiKey")
+            .help("API Configuration Key")
+            .metavar("KEY");
     Namespace ns;
     try {
       ns = argumentParser.parseArgs(args);
@@ -114,7 +118,8 @@ public class Main {
     schedulerFactory.initialize(schedulerProperties);
     Scheduler scheduler = schedulerFactory.getScheduler();
 
-    CheckAuth auth = new CheckAuthImpl(config.getApiKey());
+    CheckAuth auth = new CheckAuthImpl(
+            Optional.ofNullable(ns.getString("apiKey")).orElse(config.getApiKey()));
 
     Vertx vertx = Vertx.vertx();
     Router router = Router.router(vertx);
@@ -151,7 +156,7 @@ public class Main {
         .handler(BodyHandler.create())
         .handler(new DirCommandHandler(streamer, auth));
 
-    new Chat(config, vertx, router, scheduler).install();
+    new Chat(vertx, router, scheduler, auth).install();
 
     router.post("/telemetry/fetch")
         .handler(BodyHandler.create())
