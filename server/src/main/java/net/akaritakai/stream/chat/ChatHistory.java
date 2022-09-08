@@ -54,7 +54,7 @@ public class ChatHistory {
       _queue.remove();
     }
 
-    LOG.info("Current chat state = {}", this);
+    LOG.debug("Current chat state = {}", this);
     return message;
   }
 

@@ -3,6 +3,7 @@ package net.akaritakai.stream.client;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -98,7 +99,13 @@ public class FakeAwsS3Client extends AwsS3Client {
                           }
                         }
                       })
-                      .onFailure(this::fail);
+                      .onFailure(ex -> {
+                        if (ex instanceof NoSuchFileException) {
+                          processNext();
+                        } else {
+                          fail(ex);
+                        }
+                      });
               return;
             }
             complete();

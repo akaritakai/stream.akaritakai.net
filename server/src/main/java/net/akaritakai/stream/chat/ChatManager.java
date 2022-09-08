@@ -46,7 +46,7 @@ public class ChatManager {
   }
 
   public void sendMessage(ChatSendRequest request) throws ChatStateConflictException {
-    LOG.info("Got ChatSendRequest = {}", request);
+    LOG.debug("Got ChatSendRequest = {}", request);
     ChatHistory currentHistory = _history.get();
     if (currentHistory == null) {
       throw new ChatStateConflictException("Chat is disabled");
