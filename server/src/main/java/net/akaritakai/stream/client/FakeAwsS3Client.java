@@ -15,8 +15,12 @@ import io.vertx.core.*;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.models.stream.StreamEntry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class FakeAwsS3Client extends AwsS3Client {
+  private static final Logger LOG = LoggerFactory.getLogger(FakeAwsS3Client.class);
   private final Path _mediaRootPath;
 
   public FakeAwsS3Client(Vertx vertx, ConfigData config) {
@@ -37,7 +41,9 @@ public class FakeAwsS3Client extends AwsS3Client {
         String result = Files.readString(_mediaRootPath.resolve(path));
         promise.complete(result);
       } catch (Exception e) {
-        promise.fail(e);
+        if (!promise.tryFail(e)) {
+          LOG.error("unexpected exception", e);
+        }
       }
     });
     return promise.future();

@@ -4,10 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import net.akaritakai.stream.config.ConfigData;
-import net.akaritakai.stream.handler.chat.ChatClearHandler;
-import net.akaritakai.stream.handler.chat.ChatClientHandler;
-import net.akaritakai.stream.handler.chat.ChatDisableHandler;
-import net.akaritakai.stream.handler.chat.ChatEnableHandler;
+import net.akaritakai.stream.handler.chat.*;
 import org.quartz.Scheduler;
 
 public class Chat {
@@ -33,6 +30,9 @@ public class Chat {
         router.post("/chat/enable")
                 .handler(BodyHandler.create())
                 .handler(new ChatEnableHandler(chatManager, config.getApiKey()));
+        router.post("/chat/write")
+                .handler(BodyHandler.create())
+                .handler(new ChatWriteHandler(chatManager, config.getApiKey()));
         router.get("/chat")
                 .handler(new ChatClientHandler(vertx, chatManager));
     }
