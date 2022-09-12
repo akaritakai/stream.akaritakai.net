@@ -18,13 +18,17 @@
 </template>
 
 <script>
-  import sheetsrc from "../../assets/emoji-data/sheet_apple_64.png";
+  import sheet_apple from "../../node_modules/rm-emoji-picker/sheets/sheet_apple_64_indexed_128.png";
+  import sheet_google from "../../node_modules/rm-emoji-picker/sheets/sheet_google_64_indexed_128.png";
+  import sheet_twitter from "../../node_modules/rm-emoji-picker/sheets/sheet_twitter_64_indexed_128.png";
   import { checkText } from 'smile2emoji';
   var EmojiConvertor = require('emoji-js');
   var emoji = new EmojiConvertor();
   emoji.replace_mode = 'css';
   emoji.use_sheet = true;
-  emoji.img_sets.apple.sheet = sheetsrc;
+  emoji.img_sets.apple.sheet = sheet_apple;
+  emoji.img_sets.google.sheet = sheet_google;
+  emoji.img_sets.twitter.sheet = sheet_twitter;
   emoji.allow_caps = true;
 
   export default {
