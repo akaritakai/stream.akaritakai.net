@@ -22,6 +22,7 @@ import net.akaritakai.stream.models.chat.request.ChatJoinRequest;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
 import net.akaritakai.stream.models.chat.response.ChatMessageResponse;
 import net.akaritakai.stream.models.chat.response.ChatStatusResponse;
+import net.akaritakai.stream.scheduling.SchedulerAttribute;
 import net.akaritakai.stream.scheduling.Utils;
 import org.quartz.JobDataMap;
 import org.quartz.JobKey;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 
 public class ChatManager {
+  public static final SchedulerAttribute<ChatManager> KEY = SchedulerAttribute.instanceOf("chatManager", ChatManager.class);
   private static final Logger LOG = LoggerFactory.getLogger(ChatManager.class);
 
   private final Vertx _vertx;

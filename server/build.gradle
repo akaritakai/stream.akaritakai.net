@@ -35,6 +35,10 @@ dependencies {
 
     implementation 'org.apache.logging.log4j:log4j-core:2.18.0'
     implementation 'org.xerial:sqlite-jdbc:3.39.2.1'
+
+    runtime 'org.graalvm.js:js:22.2.0'
+    runtime 'org.graalvm.js:js-scriptengine:22.2.0'
+
     runtime 'org.apache.logging.log4j:log4j-1.2-api:2.18.0'
     runtime 'org.apache.logging.log4j:log4j-slf4j-impl:2.18.0'
 }

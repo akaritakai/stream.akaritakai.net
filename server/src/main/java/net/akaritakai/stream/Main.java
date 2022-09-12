@@ -23,6 +23,7 @@ import net.akaritakai.stream.handler.stream.StopCommandHandler;
 import net.akaritakai.stream.handler.stream.StreamStatusHandler;
 import net.akaritakai.stream.handler.telemetry.TelemetryFetchHandler;
 import net.akaritakai.stream.handler.telemetry.TelemetrySendHandler;
+import net.akaritakai.stream.scheduling.SetupScheduler;
 import net.akaritakai.stream.scheduling.Utils;
 import net.akaritakai.stream.streamer.Streamer;
 import net.akaritakai.stream.telemetry.TelemetryStore;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlite.JDBC;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.sql.Connection;
@@ -96,10 +99,13 @@ public class Main {
 
     LOG.info("Loaded config {}", config);
 
+    ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByMimeType("application/javascript");
+    LOG.info("ScriptEngine: {}", scriptEngine);
+
     StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
     Properties schedulerProperties = new Properties();
     schedulerProperties.setProperty("org.quartz.threadPool.class", org.quartz.simpl.SimpleThreadPool.class.getName());
-    schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "1");
+    schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "4");
     schedulerProperties.setProperty("org.quartz.jobStore.class", org.quartz.impl.jdbcjobstore.JobStoreTX.class.getName());
     schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", org.quartz.impl.jdbcjobstore.StdJDBCDelegate.class.getName());
     schedulerProperties.setProperty("org.quartz.jobStore.dataSource", "myDS");
@@ -117,6 +123,7 @@ public class Main {
 
     schedulerFactory.initialize(schedulerProperties);
     Scheduler scheduler = schedulerFactory.getScheduler();
+    Utils.set(scheduler, Config.KEY, config);
 
     CheckAuth auth = new CheckAuthImpl(
             Optional.ofNullable(ns.getString("apiKey")).orElse(config.getApiKey()));
@@ -125,6 +132,8 @@ public class Main {
     Router router = Router.router(vertx);
     Streamer streamer = new Streamer(vertx, config, scheduler);
     TelemetryStore telemetryStore = new TelemetryStore();
+
+    Utils.set(scheduler, Streamer.KEY, streamer);
 
     if (config.isLogRequestInfo()) {
       router.route().handler(event -> {
@@ -196,6 +205,8 @@ public class Main {
           .setEnableFSTuning(true)
           .setEnableRangeSupport(true));
     }
+
+    SetupScheduler.setup(scheduler);
 
     scheduler.start();
 

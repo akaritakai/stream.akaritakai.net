@@ -6,6 +6,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.chat.*;
+import net.akaritakai.stream.scheduling.Utils;
 import org.quartz.Scheduler;
 
 public class Chat {
@@ -19,6 +20,7 @@ public class Chat {
         this.router = router;
         this.chatManager = new ChatManager(vertx, scheduler);
         this.checkAuth = checkAuth;
+        Utils.set(scheduler, ChatManager.KEY, chatManager);
     }
 
     public void install() {

@@ -22,17 +22,17 @@ import net.akaritakai.stream.models.stream.request.StreamPauseRequest;
 import net.akaritakai.stream.models.stream.request.StreamResumeRequest;
 import net.akaritakai.stream.models.stream.request.StreamStartRequest;
 import net.akaritakai.stream.models.stream.request.StreamStopRequest;
+import net.akaritakai.stream.scheduling.SchedulerAttribute;
 import net.akaritakai.stream.scheduling.Utils;
 import org.quartz.JobDataMap;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class Streamer {
-  private static final Logger LOG = LoggerFactory.getLogger(Streamer.class);
+  public static final SchedulerAttribute<Streamer> KEY = SchedulerAttribute.instanceOf("streamer", Streamer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Streamer.class);
 
   private final Vertx _vertx;
   private final AwsS3Client _client;
@@ -339,5 +339,9 @@ public class Streamer {
 
   public void addListener(StreamerListener listener) {
     _listeners.add(listener);
+  }
+
+  public void removeListener(StreamerListener listener) {
+    _listeners.remove(listener);
   }
 }
