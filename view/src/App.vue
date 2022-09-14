@@ -11,6 +11,10 @@
 </template>
 
 <script>
+  import sheet_apple from "../node_modules/rm-emoji-picker/sheets/sheet_apple_64_indexed_128.png";
+  import sheet_google from "../node_modules/rm-emoji-picker/sheets/sheet_google_64_indexed_128.png";
+  import sheet_twitter from "../node_modules/rm-emoji-picker/sheets/sheet_twitter_64_indexed_128.png";
+
   const Chat = () => import(
     /* webpackPrefetch: true */
     /* webpackChunkName: "chat" */
@@ -30,7 +34,10 @@
     },
     data() {
       return {
-        width: 0
+        width: 0,
+        apple_png: null,
+        google_png: null,
+        twitter_png: null
       }
     },
     computed: {
@@ -47,6 +54,12 @@
         window.addEventListener('resize', this.onResize);
         this.onResize();
       });
+      this.apple_png = new Image();
+      this.apple_png.src = sheet_apple;
+      this.google_png = new Image();
+      this.google_png.src = sheet_google;
+      this.twitter_png = new Image();
+      this.twitter_png.src = sheet_twitter;
     },
     beforeDestroy() {
       window.removeEventListener('resize', this.onResize);

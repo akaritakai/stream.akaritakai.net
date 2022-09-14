@@ -30,6 +30,7 @@
   emoji.img_sets.google.sheet = sheet_google;
   emoji.img_sets.twitter.sheet = sheet_twitter;
   emoji.allow_caps = true;
+  emoji.allow_native = false;
 
   export default {
     name: 'chat-text-line',

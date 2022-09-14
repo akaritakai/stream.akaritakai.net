@@ -32,21 +32,15 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.quartz.Scheduler;
-import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.sqlite.JDBC;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class Main {
@@ -102,27 +96,7 @@ public class Main {
     ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByMimeType("application/javascript");
     LOG.info("ScriptEngine: {}", scriptEngine);
 
-    StdSchedulerFactory schedulerFactory = new StdSchedulerFactory();
-    Properties schedulerProperties = new Properties();
-    schedulerProperties.setProperty("org.quartz.threadPool.class", org.quartz.simpl.SimpleThreadPool.class.getName());
-    schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "4");
-    schedulerProperties.setProperty("org.quartz.jobStore.class", org.quartz.impl.jdbcjobstore.JobStoreTX.class.getName());
-    schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", org.quartz.impl.jdbcjobstore.StdJDBCDelegate.class.getName());
-    schedulerProperties.setProperty("org.quartz.jobStore.dataSource", "myDS");
-    schedulerProperties.setProperty("org.quartz.jobStore.useProperties", "true");
-    schedulerProperties.setProperty("org.quartz.dataSource.myDS.driver", JDBC.class.getName());
-    schedulerProperties.setProperty("org.quartz.dataSource.myDS.URL", "jdbc:sqlite:scheduler.db");
-
-    try (Connection connection = DriverManager.getConnection(schedulerProperties.getProperty("org.quartz.dataSource.myDS.URL"));
-         ResultSet rs = connection.createStatement().executeQuery("SELECT COUNT(*) FROM QRTZ_LOCKS")) {
-      LOG.info("Database already initialized");
-    } catch (SQLException ex) {
-      LOG.warn("Attempting to reinitialize the database");
-      InitDB.main(new String[0]);
-    }
-
-    schedulerFactory.initialize(schedulerProperties);
-    Scheduler scheduler = schedulerFactory.getScheduler();
+    Scheduler scheduler = SetupScheduler.createFactory().getScheduler();
     Utils.set(scheduler, Config.KEY, config);
 
     CheckAuth auth = new CheckAuthImpl(
@@ -195,12 +169,24 @@ public class Main {
         event.next();
       });
       router.route("/media/*").handler(StaticHandler.create(FileSystemAccess.ROOT, config.getMediaRootDir())
-          .setCachingEnabled(false)
+          .setCachingEnabled(true)
+          .setCacheEntryTimeout(TimeUnit.SECONDS.toMillis(10))
+          .setMaxAgeSeconds(2) // let us use 2 second segments
+          .setMaxCacheSize(32 * 1024 * 1024)
+          .setDirectoryListing(false)
+          .setIncludeHidden(false)
           .setAlwaysAsyncFS(true)
           .setEnableFSTuning(true)
           .setEnableRangeSupport(true));
       router.route().handler(StaticHandler.create(/*FileSystemAccess.ROOT, config.getWebRootDir()*/)
-          .setCachingEnabled(false)
+          .setCachingEnabled(true)
+          .setCacheEntryTimeout(TimeUnit.HOURS.toMillis(2))
+          .setMaxAgeSeconds(TimeUnit.HOURS.toSeconds(2))
+          .setMaxCacheSize(32 * 1024 * 1024)
+          .setSendVaryHeader(true)
+          .setDirectoryListing(false)
+          .setIncludeHidden(false)
+          .skipCompressionForSuffixes(new HashSet<>(Arrays.asList("jpg", "png", "woff2")))
           .setAlwaysAsyncFS(true)
           .setEnableFSTuning(true)
           .setEnableRangeSupport(true));
