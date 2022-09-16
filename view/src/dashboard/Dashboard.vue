@@ -129,10 +129,6 @@
                     <input v-model="form.start.delay" type="text" class="form-control max50w" id="startDelay" placeholder="(Optional) The delay in seconds to start">
                   </div>
                   <div class="form-group">
-                    <label for="startLive" class="form-label">Live</label>
-                    <input v-model="form.start.live" type="checkbox" class="form-control" id="startLive">
-                  </div>
-                  <div class="form-group">
                     <button type="submit" class="btn btn-primary" @click="startStream" v-if="!form.start.inProgress">Start Stream</button>
                     <button type="submit" class="btn btn-primary" v-if="form.start.inProgress" disabled>
                       <b-spinner small/> Starting...
@@ -264,8 +260,7 @@
             name: '',
             delay: '',
             seekTime: '',
-            startAt: '',
-            live: false
+            startAt: ''
           },
           pause: {
             inProgress: false
@@ -513,8 +508,7 @@
           name: this.form.start.name,
           seekTime: this.convertSeekTime(this.form.start.seekTime),
           delay: this.convertDelay(this.form.start.delay),
-          startAt: this.convertStartAt(this.form.start.startAt),
-          live: this.form.start.live
+          startAt: this.convertStartAt(this.form.start.startAt)
         }).then(response => {
           this.showResult(true, response.data);
           this.form.start.inProgress = false;
@@ -582,7 +576,7 @@
         this.form.selection.selected = items;
         if (items.length == 1) {
           let entry = items[0];
-          [this.form.start.name, this.form.start.live] = [ entry.name, entry.metadata.live ]
+          [ this.form.start.name ] = [ entry.name ]
         }
       },
       provideStreamEntries(ctx) {

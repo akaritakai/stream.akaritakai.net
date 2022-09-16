@@ -56,7 +56,12 @@ public class Streamer {
   public Future<Void> startStream(StreamStartRequest request) {
     LOG.info("Got request to start the stream: {}", request);
     Promise<Void> promise = Promise.promise();
-    _vertx.runOnContext(startStreamEvent -> {
+    _vertx.runOnContext(aVoid -> startStream0(request, promise));
+    return promise.future();
+  }
+
+  private void startStream0(StreamStartRequest request, Promise<Void> promise) {
+    try {
       // Ensure that the stream is not already running
       StreamState state = _state.get();
       if (state == null || state.getStatus() != StreamStateType.OFFLINE) {
@@ -65,99 +70,61 @@ public class Streamer {
         return;
       }
 
-      if (request.isLive()) {
-        // Stream is live
+      // Use the request provided delay or none at all
+      Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
+      LOG.info("delay={}", delay);
+      // We use the provided start time + delay, or now + delay
+      Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
 
-        // Use the request provided delay or none at all
-        Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
-        LOG.info("delay={}", delay);
-        // We use the provided start time + delay, or now + delay
-        Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
-
-        _client.getMetadata(request.getName()).onFailure(ex -> {
+      _client.getMetadata(request.getName()).onFailure(promise::fail).onSuccess(metadata -> {
+        try {
           // Create the new state
-          StreamState newState = StreamState.builder()
-                  .status(StreamStateType.ONLINE)
-                  .playlist(_livePlaylistUrl)
-                  .mediaName("LIVE")
-                  .startTime(startTime)
-                  .live(true)
-                  .build();
-          setState(newState);
-          
-          // Notify all the listeners that the stream changed
-          _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
-
-          // Stream start requested successfully
-          promise.complete();
-        }).onSuccess(metadata -> {
-          // Create the new state
-          StreamState newState = StreamState.builder()
+          StreamState.StreamStateBuilder builder = StreamState.builder()
                   .status(StreamStateType.ONLINE)
                   .playlist(metadata.getPlaylist())
-                  .mediaName(metadata.getName())
+                  .mediaName(Optional.ofNullable(metadata.getName()).orElse("LIVE"))
                   .startTime(startTime)
-                  .live(true)
-                  .build();
+                  .live(metadata.isLive());
+
+          Instant endTime;
+          if (!metadata.isLive()) {
+            // Use the request provided seek time or the default one
+            Duration seekTime = Optional.ofNullable(request.getSeekTime()).orElse(Duration.ZERO);
+            // We end at startTime + media duration - seek time
+            endTime = startTime.plus(metadata.getDuration()).minus(seekTime);
+
+            builder.mediaDuration(metadata.getDuration())
+                    .seekTime(seekTime)
+                    .endTime(endTime);
+          } else {
+            endTime = null;
+          }
+
+          StreamState newState = builder.build();
+
           setState(newState);
-          
-          // Notify all the listeners that the stream changed
-          _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
 
           // Stream start requested successfully
           promise.complete();
-        });
-      } else {
-        // Stream is pre-recorded
 
-        // Load the stream's metadata
-        _client.getMetadata(request.getName()).onFailure(promise::fail).onSuccess(metadata -> {
-          // Use the request provided delay or none at all
-          Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
-          // Use the request provided seek time or the default one
-          Duration seekTime = Optional.ofNullable(request.getSeekTime()).orElse(Duration.ZERO);
-          // We use the provided start time + delay, or now + delay
-          Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
-          // We end at startTime + media duration - seek time
-          Instant endTime = startTime.plus(metadata.getDuration()).minus(seekTime);
-
-          // Create the new state
-          StreamState newState = StreamState.builder()
-                  .status(StreamStateType.ONLINE)
-                  .playlist(metadata.getPlaylist())
-                  .mediaName(metadata.getName())
-                  .mediaDuration(metadata.getDuration())
-                  .startTime(startTime)
-                  .endTime(endTime)
-                  .seekTime(seekTime)
-                  .live(false)
-                  .build();
-          setState(newState);
-
-          // Take the stream offline at the end of the media
-          _vertx.setTimer(Duration.between(Instant.now(), endTime).toMillis(), eventEnd -> {
-            // Only take the stream online if the currently running stream is the stream we're supposed to end
-            if (Objects.equals(_state.get(), newState)) {
-              setState(StreamState.OFFLINE);
-              _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
-            }
-          });
-
-          // Notify all the listeners that the stream changed
-          _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
-
-          // Stream start requested successfully
-          promise.complete();
-        });
-      }
-    });
-    return promise.future();
+        } catch (Throwable ex) {
+          promise.fail(ex);
+        }
+      });
+    } catch (Throwable ex) {
+      promise.fail(ex);
+    }
   }
 
   public Future<Void> pauseStream(StreamPauseRequest request) {
     LOG.info("Got request to pause the stream: {}", request);
     Promise<Void> promise = Promise.promise();
-    _vertx.runOnContext(pauseStreamEvent -> {
+    _vertx.runOnContext(aVoid -> pauseStream0(request, promise));
+    return promise.future();
+  }
+
+  private void pauseStream0(StreamPauseRequest request, Promise<Void> promise) {
+    try {
       // Ensure that the stream is already running
       StreamState state = _state.get();
       if (state == null || state.getStatus() != StreamStateType.ONLINE) {
@@ -166,17 +133,17 @@ public class Streamer {
         return;
       }
 
+      StreamState newState;
       if (state.isLive()) {
         // Stream is live
 
         // Create the new state
-        StreamState newState = StreamState.builder()
+        newState = StreamState.builder()
                 .status(StreamStateType.PAUSE)
                 .playlist(state.getPlaylist())
                 .mediaName(state.getMediaName())
                 .live(true)
                 .build();
-        setState(newState);
       } else {
         // Stream is pre-recorded
 
@@ -186,7 +153,7 @@ public class Streamer {
         Duration seekTime = Duration.between(startTime, Instant.now());
 
         // Create the new state
-        StreamState newState = StreamState.builder()
+        newState = StreamState.builder()
                 .status(StreamStateType.PAUSE)
                 .playlist(state.getPlaylist())
                 .mediaName(state.getMediaName())
@@ -194,22 +161,26 @@ public class Streamer {
                 .live(false)
                 .seekTime(seekTime)
                 .build();
-        setState(newState);
       }
 
-      // Notify all the listeners that the stream changed
-      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
+      setState(newState);
 
       // Stream pause requested successfully
       promise.complete();
-    });
-    return promise.future();
+    } catch (Throwable ex) {
+      promise.fail(ex);
+    }
   }
 
   public Future<Void> resumeStream(StreamResumeRequest request) {
     LOG.info("Got request to resume the stream: {}", request);
     Promise<Void> promise = Promise.promise();
-    _vertx.runOnContext(resumeStreamEvent -> {
+    _vertx.runOnContext(aVoid -> resumeStream0(request, promise));
+    return promise.future();
+  }
+
+  private void resumeStream0(StreamResumeRequest request, Promise<Void> promise) {
+    try {
       // Ensure that the stream is paused
       StreamState state = _state.get();
       if (state == null || state.getStatus() != StreamStateType.PAUSE) {
@@ -218,70 +189,52 @@ public class Streamer {
         return;
       }
 
-      if (state.isLive()) {
-        // Stream is live
-        // Use the request provided delay or none at all
-        Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
-        // We start at the provided start time + delay, or now + delay
-        Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
+      // Use the request provided delay or none at all
+      Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
+      // We start at the provided start time + delay, or now + delay
+      Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
 
-        // Create the new state
-        StreamState newState = StreamState.builder()
-                .status(StreamStateType.ONLINE)
-                .playlist(_livePlaylistUrl)
-                .mediaName("LIVE")
-                .startTime(startTime)
-                .live(true)
-                .build();
-        setState(newState);
-      } else {
-        // Stream is pre-recorded
+      StreamState.StreamStateBuilder builder = StreamState.builder()
+              .status(StreamStateType.ONLINE)
+              .playlist(state.getPlaylist())
+              .mediaName(state.getMediaName())
+              .startTime(startTime)
+              .live(state.isLive());
 
-        // Use the request provided delay or none at all
-        Duration delay = Optional.ofNullable(request.getDelay()).orElse(Duration.ZERO);
+      Instant endTime;
+      if (!state.isLive()) {
         // Determine our new seek time (use request seek time or the time we paused at)
         Duration seekTime = Optional.ofNullable(request.getSeekTime()).orElse(state.getSeekTime());
-        // We start at the provided start time + delay, or now + delay
-        Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
         // We end at startTime + media duration - seek time
-        Instant endTime = startTime.plus(state.getMediaDuration()).minus(seekTime);
+        endTime = startTime.plus(state.getMediaDuration()).minus(seekTime);
 
-        // Create the new state
-        StreamState newState = StreamState.builder()
-                .status(StreamStateType.ONLINE)
-                .playlist(state.getPlaylist())
-                .mediaName(state.getMediaName())
-                .mediaDuration(state.getMediaDuration())
-                .startTime(startTime)
+        builder.mediaDuration(state.getMediaDuration())
                 .endTime(endTime)
-                .seekTime(seekTime)
-                .live(false)
-                .build();
-        setState(newState);
-
-        // Take the stream offline at the end of the media
-        _vertx.setTimer(Duration.between(Instant.now(), endTime).toMillis(), eventEnd -> {
-          // Only take the stream online if the currently running stream is the stream we're supposed to end
-          if (Objects.equals(_state.get(), newState)) {
-            setState(StreamState.OFFLINE);
-            _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
-          }
-        });
+                .seekTime(seekTime);
+      } else {
+        endTime = null;
       }
 
-      // Notify all the listeners that the stream changed
-      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
+      StreamState newState = builder.build();
+
+      setState(newState);
 
       // Stream resume requested successfully
       promise.complete();
-    });
-    return promise.future();
+    } catch (Throwable ex) {
+      promise.fail(ex);
+    }
   }
 
   public Future<Void> stopStream(StreamStopRequest request) {
     LOG.info("Got request to stop the stream: {}", request);
     Promise<Void> promise = Promise.promise();
-    _vertx.runOnContext(stopStreamEvent -> {
+    _vertx.runOnContext(aVoid -> stopStream0(request, promise));
+    return promise.future();
+  }
+
+  private void stopStream0(StreamStopRequest request, Promise<Void> promise) {
+    try {
       // Ensure that the stream is not already stopped
       StreamState state = _state.get();
       if (state == null || state.getStatus() == StreamStateType.OFFLINE) {
@@ -292,13 +245,12 @@ public class Streamer {
 
       // Set the new state
       setState(StreamState.OFFLINE);
-      // Notify all the listeners that the stream changed
-      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
 
       // Stream stop requested successfully
       promise.complete();
-    });
-    return promise.future();
+    } catch (Throwable ex) {
+      promise.fail(ex);
+    }
   }
 
   public StreamState getState() {
@@ -306,8 +258,8 @@ public class Streamer {
   }
 
   public void setState(StreamState state) {
-    StreamState old = _state.getAndSet(state);
-    if (old != state) {
+    StreamState old = _state.getAndSet(Objects.requireNonNull(state));
+    if (old != state && !state.equals(old)) {
       LOG.info("New state = {}", state);
       JobDataMap jobDataMap = new JobDataMap();
       jobDataMap.put("status", state.getStatus());
@@ -319,6 +271,19 @@ public class Streamer {
       jobDataMap.put("endTime", state.getEndTime());
       jobDataMap.put("seekTime", state.getSeekTime());
       Utils.triggerIfExists(_scheduler, "Stream", String.valueOf(state), jobDataMap);
+
+      // Notify all the listeners that the stream changed
+      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
+
+      if (state.getStatus() == StreamStateType.ONLINE && state.getEndTime() != null) {
+        // Take the stream offline at the end of the media
+        _vertx.setTimer(Math.max(Duration.between(Instant.now(), state.getEndTime()).toMillis(), 1), eventEnd -> {
+          // Only take the stream online if the currently running stream is the stream we're supposed to end
+          if (Objects.equals(_state.get(), state)) {
+            setState(StreamState.OFFLINE);
+          }
+        });
+      }
     }
   }
 

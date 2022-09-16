@@ -21,7 +21,6 @@ import net.akaritakai.stream.json.NumberToInstantConverter;
 @JsonDeserialize(builder = StreamStartRequest.StreamStartRequestBuilder.class)
 public class StreamStartRequest {
   String key;
-  boolean live;
   @JsonInclude(Include.NON_NULL) String name;
   @JsonInclude(Include.NON_NULL) @JsonSerialize(converter = DurationToNumberConverter.class) Duration seekTime;
   @JsonInclude(Include.NON_NULL) @JsonSerialize(converter = DurationToNumberConverter.class) Duration delay;
