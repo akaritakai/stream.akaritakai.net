@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Value;
 import net.akaritakai.stream.json.*;
+import net.akaritakai.stream.models.stream.StreamMetadata;
 import org.quartz.TimeOfDay;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Set;
 
@@ -26,7 +28,6 @@ public class ScheduleEntry {
     ScheduleType type;
 
     @JsonSerialize(converter = DurationToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToDurationConverter.class)
     Duration interval;
 
     Integer repeatCount;
@@ -34,7 +35,6 @@ public class ScheduleEntry {
     String cronExpression;
 
     @JsonSerialize(converter = ZoneIdToStringConverter.class)
-    @JsonDeserialize(converter = StringToZoneIdConverter.class)
     ZoneId timeZone;
 
     Boolean preserveHourOfDayAcrossDaylightSavings;
@@ -43,16 +43,28 @@ public class ScheduleEntry {
     Set<Integer> daysOfWeek;
 
     @JsonSerialize(converter = TimeOfDayToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToTimeOfDayConverter.class)
     TimeOfDay startTimeOfDay;
 
     @JsonSerialize(converter = TimeOfDayToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToTimeOfDayConverter.class)
     TimeOfDay endTimeOfDay;
 
     Integer misfireInstruction;
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class ScheduleEntryBuilder {
+    public static class ScheduleEntryBuilder implements ScheduleEntryBuilderMixin {
+    }
+
+    private interface ScheduleEntryBuilderMixin {
+        @JsonDeserialize(converter = NumberToDurationConverter.class)
+        ScheduleEntryBuilder interval(Duration duration);
+
+        @JsonDeserialize(converter = StringToZoneIdConverter.class)
+        ScheduleEntryBuilder timeZone(ZoneId zoneId);
+
+        @JsonDeserialize(converter = NumberToTimeOfDayConverter.class)
+        ScheduleEntryBuilder startTimeOfDay(TimeOfDay timeOfDay);
+
+        @JsonDeserialize(converter = NumberToTimeOfDayConverter.class)
+        ScheduleEntryBuilder endTimeOfDay(TimeOfDay timeOfDay);
     }
 }

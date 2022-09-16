@@ -7,8 +7,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Value;
 import net.akaritakai.stream.json.InstantToNumberConverter;
+import net.akaritakai.stream.json.NumberToDurationConverter;
 import net.akaritakai.stream.json.NumberToInstantConverter;
+import net.akaritakai.stream.models.stream.StreamMetadata;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
@@ -31,28 +34,41 @@ public class TriggerEntry {
     boolean mayFireAgain;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant startTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant endTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant nextFireTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant previousFireTime;
 
     @JsonSerialize(converter = InstantToNumberConverter.class)
-    @JsonDeserialize(converter = NumberToInstantConverter.class)
     Instant finalFireTime;
 
     int misfireInstruction;
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static class TriggerEntryBuilder {
+    public static class TriggerEntryBuilder implements TriggerEntryBuilderMixin {
+    }
+
+
+    private interface TriggerEntryBuilderMixin {
+        @JsonDeserialize(converter = NumberToInstantConverter.class)
+        TriggerEntryBuilder startTime(Instant duration);
+
+        @JsonDeserialize(converter = NumberToInstantConverter.class)
+        TriggerEntryBuilder endTime(Instant duration);
+
+        @JsonDeserialize(converter = NumberToInstantConverter.class)
+        TriggerEntryBuilder nextFireTime(Instant duration);
+
+        @JsonDeserialize(converter = NumberToInstantConverter.class)
+        TriggerEntryBuilder previousFireTime(Instant duration);
+
+        @JsonDeserialize(converter = NumberToInstantConverter.class)
+        TriggerEntryBuilder finalFireTime(Instant duration);
     }
 }
