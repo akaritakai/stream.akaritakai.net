@@ -6,11 +6,14 @@
         <!-- Nick set -->
         <div id="chat-content" ref="chatContent" v-if="enabled && nick && nick.length > 0">
           <template v-for="message in messages">
-            <div class="chat-line">
-              <template v-if="message.messageType === 'TEXT'">
-                <chat-text-line :nick="message.nickname" :message="message.message" :timestamp="message.timestamp"/>
-              </template>
-            </div>
+            <template v-if="message.messageType === 'TEXT'">
+              <div class="chat-line">
+                <chat-text-line :emoji="emojiConv" :slackmoji="slackmojis" :nick="message.nickname" :message="message.message" :timestamp="message.timestamp"/>
+              </div>
+            </template>
+            <template v-if="message.messageType === 'EMOJI'">
+              {{ updateEmoji(message.nickname, message.message) }}
+            </template>
           </template>
         </div>
       </template>
@@ -43,6 +46,11 @@
 </template>
 
 <script>
+  import sheet_apple from "../../node_modules/rm-emoji-picker/sheets/sheet_apple_64_indexed_128.png";
+  import sheet_google from "../../node_modules/rm-emoji-picker/sheets/sheet_google_64_indexed_128.png";
+  import sheet_twitter from "../../node_modules/rm-emoji-picker/sheets/sheet_twitter_64_indexed_128.png";
+  var EmojiConvertor = require('emoji-js');
+
   const ChatTextLine = () => import(
     /* webpackChunkName: "chatTextLine" */
     /* webpackPrefetch: true */
@@ -50,10 +58,27 @@
 
   import {mapState} from "vuex";
 
+  var uniregexp = new RegExp("^[0-9a-f]{5}$");
+
   export default {
     name: 'chat-content',
     data() {
+      var emoji = new EmojiConvertor();
+      emoji.replace_mode = 'css';
+      emoji.use_sheet = true;
+      emoji.img_sets.apple.sheet = sheet_apple;
+      emoji.img_sets.google.sheet = sheet_google;
+      emoji.img_sets.twitter.sheet = sheet_twitter;
+      emoji.allow_caps = true;
+      emoji.allow_native = false;
+      emoji.addAliases({
+        'thumbs_up' : '1f44d',
+        'thumbs-up' : '1f44d'
+      });
+
       return {
+        emojiConv: emoji,
+        slackmojis: { },
         messages: this.orderedMessageList(),
         inputNick: '',
         inputError: null
@@ -95,6 +120,30 @@
           if (lastChatMessage) {
             lastChatMessage.scrollIntoView();
           }
+        }
+      },
+      updateEmoji(nick, url) {
+        if (!nick.startsWith(":") || !nick.endsWith(":")) {
+          console.log("invalid emoji nick: " + nick);
+          return;
+        }
+        var emojiNick = nick.substring(1, nick.length - 1);
+        if (!url || url == "null") {
+          delete this.slackmojis[nick];
+          this.emojiConv.removeAliases([emojiNick]);
+        } else if (uniregexp.test(url)) {
+          var map = { };
+          map[nick.substring(1, nick.length - 1)] = url;
+          this.emojiConv.addAliases(map);
+          delete this.slackmojis[nick];
+        } else {
+          try {
+            var urlObject = new URL(url);
+            var img = new Image();
+            img.src = urlObject;
+            this.slackmojis[nick] = img;
+            this.emojiConv.removeAliases([emojiNick]);
+          } catch (e) { }
         }
       },
       setNick() {

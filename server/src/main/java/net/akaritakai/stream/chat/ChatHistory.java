@@ -48,6 +48,7 @@ public class ChatHistory {
           .timestamp(System.currentTimeMillis())
           .build();
       _queue.add(message);
+      LOG.info("addMessage({})", message);
     }
 
     if (_position.get() > CAPACITY) {

@@ -2,7 +2,11 @@ package net.akaritakai.stream.streamer;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -53,6 +57,18 @@ public class Streamer {
     _livePlaylistUrl = config.getLivePlaylistUrl();
   }
 
+  static StreamState.StreamStateBuilder builder(StreamState state) {
+    return StreamState.builder()
+            .status(state.getStatus())
+            .live(state.isLive())
+            .playlist(state.getPlaylist())
+            .mediaName(state.getMediaName())
+            .mediaDuration(state.getMediaDuration())
+            .startTime(state.getStartTime())
+            .endTime(state.getEndTime())
+            .seekTime(state.getSeekTime());
+  }
+
   public Future<Void> startStream(StreamStartRequest request) {
     LOG.info("Got request to start the stream: {}", request);
     Promise<Void> promise = Promise.promise();
@@ -86,18 +102,15 @@ public class Streamer {
                   .startTime(startTime)
                   .live(metadata.isLive());
 
-          Instant endTime;
           if (!metadata.isLive()) {
             // Use the request provided seek time or the default one
             Duration seekTime = Optional.ofNullable(request.getSeekTime()).orElse(Duration.ZERO);
             // We end at startTime + media duration - seek time
-            endTime = startTime.plus(metadata.getDuration()).minus(seekTime);
+            Instant endTime = startTime.plus(metadata.getDuration()).minus(seekTime);
 
             builder.mediaDuration(metadata.getDuration())
                     .seekTime(seekTime)
                     .endTime(endTime);
-          } else {
-            endTime = null;
           }
 
           StreamState newState = builder.build();
@@ -133,18 +146,10 @@ public class Streamer {
         return;
       }
 
-      StreamState newState;
-      if (state.isLive()) {
-        // Stream is live
+      StreamState.StreamStateBuilder builder = builder(state)
+              .status(StreamStateType.PAUSE);
 
-        // Create the new state
-        newState = StreamState.builder()
-                .status(StreamStateType.PAUSE)
-                .playlist(state.getPlaylist())
-                .mediaName(state.getMediaName())
-                .live(true)
-                .build();
-      } else {
+      if (!state.isLive()) {
         // Stream is pre-recorded
 
         // Determine the virtual start time (start time - seek time)
@@ -153,15 +158,12 @@ public class Streamer {
         Duration seekTime = Duration.between(startTime, Instant.now());
 
         // Create the new state
-        newState = StreamState.builder()
-                .status(StreamStateType.PAUSE)
-                .playlist(state.getPlaylist())
-                .mediaName(state.getMediaName())
+        builder
                 .mediaDuration(state.getMediaDuration())
-                .live(false)
-                .seekTime(seekTime)
-                .build();
+                .seekTime(seekTime);
       }
+
+      StreamState newState = builder.build();
 
       setState(newState);
 
@@ -194,25 +196,19 @@ public class Streamer {
       // We start at the provided start time + delay, or now + delay
       Instant startTime = Optional.ofNullable(request.getStartAt()).orElse(Instant.now()).plus(delay);
 
-      StreamState.StreamStateBuilder builder = StreamState.builder()
+      StreamState.StreamStateBuilder builder = builder(state)
               .status(StreamStateType.ONLINE)
-              .playlist(state.getPlaylist())
-              .mediaName(state.getMediaName())
-              .startTime(startTime)
-              .live(state.isLive());
+              .startTime(startTime);
 
-      Instant endTime;
       if (!state.isLive()) {
         // Determine our new seek time (use request seek time or the time we paused at)
         Duration seekTime = Optional.ofNullable(request.getSeekTime()).orElse(state.getSeekTime());
         // We end at startTime + media duration - seek time
-        endTime = startTime.plus(state.getMediaDuration()).minus(seekTime);
+        Instant endTime = startTime.plus(state.getMediaDuration()).minus(seekTime);
 
         builder.mediaDuration(state.getMediaDuration())
                 .endTime(endTime)
                 .seekTime(seekTime);
-      } else {
-        endTime = null;
       }
 
       StreamState newState = builder.build();
@@ -258,9 +254,22 @@ public class Streamer {
   }
 
   public void setState(StreamState state) {
+    if (state.getStatus() == StreamStateType.ONLINE && state.getEndTime() != null) {
+      // Take the stream offline at the end of the media
+      _vertx.setTimer(Math.max(Duration.between(Instant.now(), state.getEndTime()).toMillis(), 1), eventEnd -> {
+        // Only take the stream online if the currently running stream is the stream we're supposed to end
+        if (Objects.equals(_state.get(), state)) {
+          setState(StreamState.OFFLINE);
+        }
+      });
+    }
     StreamState old = _state.getAndSet(Objects.requireNonNull(state));
     if (old != state && !state.equals(old)) {
       LOG.info("New state = {}", state);
+
+      // Notify all the listeners that the stream changed
+      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
+
       JobDataMap jobDataMap = new JobDataMap();
       jobDataMap.put("status", state.getStatus());
       jobDataMap.put("live", state.isLive());
@@ -271,19 +280,6 @@ public class Streamer {
       jobDataMap.put("endTime", state.getEndTime());
       jobDataMap.put("seekTime", state.getSeekTime());
       Utils.triggerIfExists(_scheduler, "Stream", String.valueOf(state), jobDataMap);
-
-      // Notify all the listeners that the stream changed
-      _listeners.forEach(listener -> _vertx.runOnContext(e -> listener.onStateUpdate(_state.get())));
-
-      if (state.getStatus() == StreamStateType.ONLINE && state.getEndTime() != null) {
-        // Take the stream offline at the end of the media
-        _vertx.setTimer(Math.max(Duration.between(Instant.now(), state.getEndTime()).toMillis(), 1), eventEnd -> {
-          // Only take the stream online if the currently running stream is the stream we're supposed to end
-          if (Objects.equals(_state.get(), state)) {
-            setState(StreamState.OFFLINE);
-          }
-        });
-      }
     }
   }
 

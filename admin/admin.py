@@ -1,6 +1,8 @@
+import sys
 from datetime import date,datetime,time
-from backports.datetime_fromisoformat import MonkeyPatch
-MonkeyPatch.patch_fromisoformat()
+if sys.version_info < (3, 7):
+  from backports.datetime_fromisoformat import MonkeyPatch
+  MonkeyPatch.patch_fromisoformat()
 import argparse
 import requests
 import json
@@ -62,6 +64,13 @@ class Chat():
     nick = self.args.COMMAND[2]
     msg = " ".join(self.args.COMMAND[3:])
     print(requests.post(uri(self.args, 'chat/write'), data=json.dumps({'key':self.args.apiKey,'messageType':'TEXT','nickname':nick,'message':msg}), headers={'content-type':'application/json'}))
+  def setemoji(self):
+    if len(self.args.COMMAND) != 4:
+      print("missing name and url")
+      return
+    nick = self.args.COMMAND[2]
+    msg = self.args.COMMAND[3]
+    print(requests.post(uri(self.args, 'chat/write'), data=json.dumps({'key':self.args.apiKey,'messageType':'EMOJI','nickname':nick,'message':msg}), headers={'content-type':'application/json'}))
 class Main():
   def __init__(self, args):
     self.args = args

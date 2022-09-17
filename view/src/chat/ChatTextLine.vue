@@ -18,20 +18,6 @@
 </template>
 
 <script>
-  import sheet_apple from "../../node_modules/rm-emoji-picker/sheets/sheet_apple_64_indexed_128.png";
-  import sheet_google from "../../node_modules/rm-emoji-picker/sheets/sheet_google_64_indexed_128.png";
-  import sheet_twitter from "../../node_modules/rm-emoji-picker/sheets/sheet_twitter_64_indexed_128.png";
-  import { checkText } from 'smile2emoji';
-  var EmojiConvertor = require('emoji-js');
-  var emoji = new EmojiConvertor();
-  emoji.replace_mode = 'css';
-  emoji.use_sheet = true;
-  emoji.img_sets.apple.sheet = sheet_apple;
-  emoji.img_sets.google.sheet = sheet_google;
-  emoji.img_sets.twitter.sheet = sheet_twitter;
-  emoji.allow_caps = true;
-  emoji.allow_native = false;
-
   export default {
     name: 'chat-text-line',
     data() {
@@ -59,6 +45,8 @@
       }
     },
     props: {
+      emoji: null,
+      slackmoji: null,
       nick: String,
       message: String,
       timestamp: Number
@@ -112,6 +100,13 @@
                 type: "img",
                 content: url
               });
+            } else if (token.startsWith(":") && token.endsWith(":") && (token in this.slackmoji)) {
+              const url = this.slackmoji[token].src;
+              validUrl = true;
+              parts.push({
+                type: "img",
+                content: url
+              });
             }
           } catch (_) {
           }
@@ -132,8 +127,8 @@
           value = value.substring(0, 100) + "...";
         }
         var ctl = document.createElement("textarea");
-        ctl.innerText = checkText(value);
-        return emoji.replace_colons(ctl.innerHTML);
+        ctl.innerText = this.emoji.replace_emoticons_with_colons(value);
+        return this.emoji.replace_colons(ctl.innerHTML);
       }
     }
   }
@@ -172,6 +167,14 @@
     &:visited {
       color: olive;
     }
+  }
+
+  img.chat-text-line-link {
+    vertical-align: middle;
+  }
+
+  span.emoji-outer {
+    vertical-align: middle;
   }
 
   chat-text-span {

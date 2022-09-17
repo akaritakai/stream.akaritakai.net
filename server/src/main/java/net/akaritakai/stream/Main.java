@@ -188,6 +188,7 @@ public class Main {
           .setIncludeHidden(false)
           .skipCompressionForSuffixes(new HashSet<>(Arrays.asList("jpg", "png", "woff2")))
           .setAlwaysAsyncFS(true)
+          .setFilesReadOnly(true)
           .setEnableFSTuning(true)
           .setEnableRangeSupport(true));
     }

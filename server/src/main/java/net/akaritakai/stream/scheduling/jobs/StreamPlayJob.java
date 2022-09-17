@@ -30,8 +30,6 @@ public class StreamPlayJob implements InterruptableJob, StreamerListener {
     private StreamStartRequest buildRequest(JobExecutionContext context) {
         StreamStartRequest.StreamStartRequestBuilder builder = StreamStartRequest.builder()
                 .name(context.get("streamName").toString());
-        Optional.ofNullable(context.get("live")).map(String::valueOf).map(Boolean::parseBoolean)
-                .ifPresent(builder::live);
         Optional.ofNullable(context.get("seekTime")).map(String::valueOf).map(Long::parseLong)
                 .map(NumberToDurationConverter.INSTANCE::convert)
                 .ifPresent(builder::seekTime);
