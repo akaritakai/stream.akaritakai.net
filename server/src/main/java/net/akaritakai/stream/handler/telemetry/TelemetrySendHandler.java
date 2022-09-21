@@ -5,6 +5,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.RoutingContext;
+import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.telemetry.TelemetryEvent;
 import net.akaritakai.stream.models.telemetry.TelemetryEventRequest;
 import net.akaritakai.stream.telemetry.TelemetryStore;
@@ -28,7 +29,7 @@ public class TelemetrySendHandler implements Handler<RoutingContext> {
 
   @Override
   public void handle(RoutingContext context) {
-    InetAddress ipAddress = getIpAddressFromRequest(context.request());
+    InetAddress ipAddress = Util.getIpAddressFromRequest(context.request());
     context.request().toWebSocket().onFailure(context::fail).onSuccess(socket -> handle(context, ipAddress, socket));
   }
 
@@ -50,27 +51,6 @@ public class TelemetrySendHandler implements Handler<RoutingContext> {
       });
     } catch (Exception e) {
       socket.close((short) 500, "Unable to process telemetry request");
-    }
-  }
-
-  public InetAddress getIpAddressFromRequest(HttpServerRequest request) {
-    try {
-      String headerValue = request.getHeader("X-Forwarded-For");
-      if (headerValue == null) {
-        return InetAddress.getByName(request.remoteAddress().host());
-      }
-      String[] values = headerValue.split(",");
-      if (values.length >= 2) {
-        // The last value will be CloudFront's IP
-        // The 2nd to last will be the IP talking to CloudFront
-        return InetAddress.getByName(values[values.length - 2].trim());
-      } else if (values.length == 1) {
-        return InetAddress.getByName(values[0]); // Shouldn't be possible, but might happen in a dev setup
-      } else {
-        return InetAddress.getByName(request.remoteAddress().host()); // Dev setup
-      }
-    } catch (Exception e) {
-      return null; // No valid IP address found
     }
   }
 

@@ -1,6 +1,7 @@
 package net.akaritakai.stream.handler.telemetry;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -27,7 +28,7 @@ public class TelemetryFetchHandler extends AbstractHandler<TelemetryFetchRequest
     Validate.notEmpty(request.getKey(), "key cannot be null/empty");
   }
 
-  protected void handleAuthorized(TelemetryFetchRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, TelemetryFetchRequest request, HttpServerResponse response) {
     try {
       String message = OBJECT_MAPPER.writeValueAsString(_store.getTelemetry());
       handleSuccess(message, APPLICATION_JSON, response);

@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.stream;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -25,7 +26,7 @@ public class DirCommandHandler extends AbstractHandler<StreamDirRequest> {
         Validate.notEmpty(request.getKey(), "key cannot be null/empty");
     }
 
-    protected void handleAuthorized(StreamDirRequest request, HttpServerResponse response) {
+    protected void handleAuthorized(HttpServerRequest httpRequest, StreamDirRequest request, HttpServerResponse response) {
         _streamer.listStreams(request.getFilter()).onSuccess(list -> {
             try {
                 list.sort(Comparator.comparing(StreamEntry::getName));

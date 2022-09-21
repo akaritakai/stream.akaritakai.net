@@ -1,5 +1,6 @@
 package net.akaritakai.stream.chat;
 
+import java.net.InetAddress;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,7 @@ public class ChatHistory {
     LOG.info("Current chat state = {}", this);
   }
 
-  public ChatMessage addMessage(ChatSendRequest request) {
+  public ChatMessage addMessage(ChatSendRequest request, InetAddress source) {
     ChatMessage message;
 
     synchronized (this) {
@@ -46,6 +47,7 @@ public class ChatHistory {
           .nickname(request.getNickname())
           .message(request.getMessage())
           .timestamp(System.currentTimeMillis())
+          .source(source)
           .build();
       _queue.add(message);
       LOG.info("addMessage({})", message);

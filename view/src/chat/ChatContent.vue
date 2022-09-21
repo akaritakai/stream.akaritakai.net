@@ -114,10 +114,25 @@
           return message1.sequence.position - message2.sequence.position;
         });
       },
+      previousChatTextLine(elem) {
+        while (elem && !elem.classList.contains("chat-line")) {
+          elem = elem.previousElementSibling;
+        }
+        return elem;
+      },
       scrollToBottom() {
         if (this.$refs.chatContent) {
-          const lastChatMessage = this.$refs.chatContent.lastElementChild;
+          const lastChatMessage = this.previousChatTextLine(this.$refs.chatContent.lastElementChild);
           if (lastChatMessage) {
+            const prev = this.previousChatTextLine(lastChatMessage.previousElementSibling);
+            if (prev) {
+              const d = prev.getBoundingClientRect();
+              const e = document.elementFromPoint((d.left + d.right) / 2, (d.top + d.bottom) / 2);
+              if (!Object.is(prev, e) && !prev.contains(e)) {
+                // not visible
+                return
+              }
+            }
             lastChatMessage.scrollIntoView();
           }
         }

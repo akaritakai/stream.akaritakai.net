@@ -11,6 +11,7 @@ import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.RoutingContext;
 import net.akaritakai.stream.chat.ChatListener;
 import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.request.ChatJoinRequest;
 import net.akaritakai.stream.models.chat.request.ChatPartRequest;
 import net.akaritakai.stream.models.chat.request.ChatRequest;
@@ -66,7 +67,7 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
           try {
             validateChatSendRequest((ChatSendRequest) request);
             try {
-              _chat.sendMessage((ChatSendRequest) request);
+              _chat.sendMessage((ChatSendRequest) request, Util.getIpAddressFromRequest(event.request()));
             } catch (Exception e) {
               // This should only occur if the server is not available
               LOG.warn("Unable to send chat message. Reason: {}: {}", e.getClass().getCanonicalName(), e.getMessage());

@@ -2,6 +2,7 @@ package net.akaritakai.stream.scheduling.jobs;
 
 import net.akaritakai.stream.chat.ChatManager;
 import net.akaritakai.stream.exception.ChatStateConflictException;
+import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.ChatMessageType;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
 import net.akaritakai.stream.scheduling.Utils;
@@ -19,7 +20,7 @@ public class ChatSendJob implements Job {
                 .build();
         ChatManager chatManager = Utils.get(context.getScheduler(), ChatManager.KEY);
         try {
-            chatManager.sendMessage(request);
+            chatManager.sendMessage(request, Util.ANY);
         } catch (ChatStateConflictException e) {
             throw new JobExecutionException(e);
         }

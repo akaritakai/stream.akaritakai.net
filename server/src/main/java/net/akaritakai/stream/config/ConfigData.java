@@ -28,6 +28,8 @@ public class ConfigData {
   // Enable logging request info
   boolean logRequestInfo;
 
+  String emojisFile;
+
   @JsonPOJOBuilder(withPrefix = "")
   public static class ConfigDataBuilder {
   }

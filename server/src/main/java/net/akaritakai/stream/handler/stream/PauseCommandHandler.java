@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.stream;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -23,7 +24,7 @@ public class PauseCommandHandler extends AbstractHandler<StreamPauseRequest> {
     Validate.notEmpty(request.getKey(), "key cannot be null/empty");
   }
 
-  protected void handleAuthorized(StreamPauseRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, StreamPauseRequest request, HttpServerResponse response) {
     _streamer.pauseStream(request)
         .onSuccess(event -> handleSuccess(response))
         .onFailure(t -> handleFailure(response, t));

@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.stream;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -23,7 +24,7 @@ public class StopCommandHandler extends AbstractHandler<StreamStopRequest> {
     Validate.notEmpty(request.getKey(), "key cannot be null/empty");
   }
 
-  protected void handleAuthorized(StreamStopRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, StreamStopRequest request, HttpServerResponse response) {
     _streamer.stopStream(request)
         .onSuccess(event -> handleSuccess(response))
         .onFailure(t -> handleFailure(response, t));

@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.quartz;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -31,7 +32,7 @@ public class JobsHandler extends AbstractHandler<ListJobsRequest> {
     }
 
     @Override
-    protected void handleAuthorized(ListJobsRequest listJobsRequest, HttpServerResponse response) {
+    protected void handleAuthorized(HttpServerRequest httpRequest, ListJobsRequest listJobsRequest, HttpServerResponse response) {
         String groupPrefix = listJobsRequest.getGroupPrefix();
         try {
             List<JobEntry> jobs = new ArrayList<>();

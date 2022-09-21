@@ -1,6 +1,7 @@
 package net.akaritakai.stream.handler.stream;
 
 import com.google.common.base.Throwables;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.exception.StreamStateConflictException;
@@ -30,7 +31,7 @@ public class StartCommandHandler extends AbstractHandler<StreamStartRequest> {
         "delay cannot be negative");
   }
 
-  protected void handleAuthorized(StreamStartRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, StreamStartRequest request, HttpServerResponse response) {
     _streamer.startStream(request)
         .onSuccess(event -> handleSuccess(response))
         .onFailure(t -> {

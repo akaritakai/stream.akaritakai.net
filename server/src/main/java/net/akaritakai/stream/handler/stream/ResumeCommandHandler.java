@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.stream;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -29,7 +30,7 @@ public class ResumeCommandHandler extends AbstractHandler<StreamResumeRequest> {
         "seek time cannot be negative");
   }
 
-  protected void handleAuthorized(StreamResumeRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, StreamResumeRequest request, HttpServerResponse response) {
     _streamer.resumeStream(request)
         .onSuccess(event -> handleSuccess(response))
         .onFailure(t -> handleFailure(response, t));

@@ -2,6 +2,7 @@ package net.akaritakai.stream.handler.info;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -31,7 +32,7 @@ public class LogFetchHandler extends AbstractHandler<LogFetchRequest>
     }
 
     @Override
-    protected void handleAuthorized(LogFetchRequest request, HttpServerResponse response) {
+    protected void handleAuthorized(HttpServerRequest httpRequest, LogFetchRequest request, HttpServerResponse response) {
         try {
             response.setStatusCode(200)
                     .setChunked(true)

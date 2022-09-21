@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.quartz;
 
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -28,7 +29,7 @@ public class TriggersHandler extends AbstractHandler<ListTriggersRequest> {
     }
 
     @Override
-    protected void handleAuthorized(ListTriggersRequest listTriggersRequest, HttpServerResponse response) {
+    protected void handleAuthorized(HttpServerRequest httpRequest, ListTriggersRequest listTriggersRequest, HttpServerResponse response) {
         String groupPrefix = listTriggersRequest.getGroupPrefix();
         try {
             List<TriggerEntry> triggers = new ArrayList<>();

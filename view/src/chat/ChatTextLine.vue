@@ -100,13 +100,24 @@
                 type: "img",
                 content: url
               });
-            } else if (token.startsWith(":") && token.endsWith(":") && (token in this.slackmoji)) {
-              const url = this.slackmoji[token].src;
-              validUrl = true;
-              parts.push({
-                type: "img",
-                content: url
-              });
+            } else if (token.startsWith(":") && token.endsWith(":")) {
+              var t = token;
+              if (!(t in this.slackmoji)) {
+                const sep = t.indexOf("::");
+                if (sep < 1) {
+                  t = "";
+                } else {
+                  t = t.substring(0, sep + 1);
+                }
+              }
+              if (t.length > 2 && (t in this.slackmoji)) {
+                const url = this.slackmoji[t].src;
+                validUrl = true;
+                parts.push({
+                  type: "img",
+                  content: url
+                });
+              }
             }
           } catch (_) {
           }

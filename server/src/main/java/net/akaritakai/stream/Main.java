@@ -63,6 +63,10 @@ public class Main {
             .dest("apiKey")
             .help("API Configuration Key")
             .metavar("KEY");
+    argumentParser.addArgument("--emojisFile")
+            .dest("emojisFile")
+            .help("Custom emojis json file")
+            .metavar("FILE");
     Namespace ns;
     try {
       ns = argumentParser.parseArgs(args);
@@ -139,7 +143,10 @@ public class Main {
         .handler(BodyHandler.create())
         .handler(new DirCommandHandler(streamer, auth));
 
-    new Chat(vertx, router, scheduler, auth).install();
+    new Chat(vertx, router, scheduler, auth)
+            .addCustomEmojis(Optional.ofNullable(ns.getString("emojisFile")).map(File::new)
+                    .orElse(Optional.ofNullable(config.getEmojisFile()).map(File::new).orElse(null)))
+            .install();
 
     router.post("/telemetry/fetch")
         .handler(BodyHandler.create())

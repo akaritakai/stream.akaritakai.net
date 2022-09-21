@@ -55,7 +55,7 @@
                      placeholder="Filter/Search - max 10 results">
                 <br>
                 <b-table class="scroll-x max50wt" small head-variant="light"
-                     id="stream-entries"
+                     id="stream-entries" ref="streamEntries"
                      :busy.sync="form.selection.inProgress"
                      primary-key="name"
                      :fields="form.selection.fields"
@@ -173,7 +173,13 @@
              </td></tr>
              </tbody>
            </table>
-         </b-tab>
+          </b-tab>
+          <b-tab title="Chat Log">
+            <chat-log/>
+          </b-tab>
+          <b-tab title="Emojis">
+            <emoji-tool/>
+          </b-tab>
           <b-tab title="Scheduling">
             <b-tabs>
               <b-tab title="Status">
@@ -221,13 +227,25 @@
     /* webpackPrefetch: true */
     './StreamViewers.vue');
 
+  const ChatLog = () => import(
+    /* webpackChunkName: "chatLog" */
+    /* webpackPrefetch: true */
+    './ChatLog.vue');
+
+  const EmojiTool = () => import(
+    /* webpackChunkName: "emojiTool" */
+    /* webpackPrefetch: true */
+    './EmojiTool.vue');
+
   Vue.use(BootstrapVue);
   Vue.use(AlertPlugin);
 
   export default {
     name: 'Dashboard',
     components: {
-      StreamViewers
+      StreamViewers,
+      ChatLog,
+      EmojiTool
     },
     data() {
       return {
@@ -368,7 +386,7 @@
     watch: {
       selectionFilter(value) {
         this.form.selection.filter = value
-        this.$root.$emit('bv::refresh::table', 'stream-entries')
+        this.$refs.streamEntries.refresh()
       }
     },
     mounted() {
@@ -573,10 +591,14 @@
           return([])
         })
       },
-      showResult(success, message) {
-        this.result.message = message;
-        this.result.success = success;
-        this.result.show = true;
+      showResult(successValue, messageValue) {
+        var result = {
+          message: messageValue,
+          success: successValue,
+          show: true
+        }
+        this.result = result;
+        setTimeout(function() { result.show = false }, 10000)
       },
       convertDelay(delayTimeStr) {
         if (delayTimeStr == null || delayTimeStr.length === 0) {

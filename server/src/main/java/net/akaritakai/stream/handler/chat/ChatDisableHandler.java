@@ -1,12 +1,8 @@
 package net.akaritakai.stream.handler.chat;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
-import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.web.RoutingContext;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.chat.ChatManager;
 import net.akaritakai.stream.handler.AbstractHandler;
@@ -35,7 +31,7 @@ public class ChatDisableHandler extends AbstractHandler<ChatDisableRequest> {
     Validate.notEmpty(request.getKey(), "key cannot be null/empty");
   }
 
-  protected void handleAuthorized(ChatDisableRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, ChatDisableRequest request, HttpServerResponse response) {
     _chat.disableChat(request)
         .onSuccess(event -> handleSuccess(response))
         .onFailure(t -> handleFailure(response, t));

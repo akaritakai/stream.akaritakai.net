@@ -1,15 +1,12 @@
 package net.akaritakai.stream.handler.chat;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
-import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.ext.web.RoutingContext;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.chat.ChatManager;
 import net.akaritakai.stream.handler.AbstractHandler;
+import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.commands.ChatWriteRequest;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
 import org.apache.commons.lang3.Validate;
@@ -36,13 +33,13 @@ public class ChatWriteHandler extends AbstractHandler<ChatWriteRequest> {
     Validate.notEmpty(request.getKey(), "key cannot be null/empty");
   }
 
-  protected void handleAuthorized(ChatWriteRequest request, HttpServerResponse response) {
+  protected void handleAuthorized(HttpServerRequest httpRequest, ChatWriteRequest request, HttpServerResponse response) {
     try {
       _chat.sendMessage(ChatSendRequest.builder()
               .messageType(request.getMessageType())
               .nickname(request.getNickname())
               .message(request.getMessage())
-              .build());
+              .build(), Util.getIpAddressFromRequest(httpRequest));
       handleSuccess(response);
     } catch (Exception ex) {
       handleFailure(response, ex);

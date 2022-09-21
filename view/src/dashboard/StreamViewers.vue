@@ -43,8 +43,3 @@
     }
   }
 </script>
-
-<style lang="scss">
-  .stream-viewers {
-  }
-</style>

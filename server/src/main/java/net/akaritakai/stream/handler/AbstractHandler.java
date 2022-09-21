@@ -3,6 +3,7 @@ package net.akaritakai.stream.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import net.akaritakai.stream.CheckAuth;
@@ -30,7 +31,7 @@ public abstract class AbstractHandler<REQUEST> implements Handler<RoutingContext
             byte[] payload = event.getBody().getBytes();
             REQUEST request = OBJECT_MAPPER.readValue(payload, _requestClass);
             validateRequest(request);
-            handleRequest(request, event.response());
+            handleRequest(event.request(), request, event.response());
         } catch (Exception e) {
             LOG.warn("Got invalid request", e);
             handleInvalidRequest(event.response());
@@ -43,19 +44,19 @@ public abstract class AbstractHandler<REQUEST> implements Handler<RoutingContext
         return _checkAuth.isAuthorizedRequest(request);
     }
 
-    private void handleRequest(REQUEST request, HttpServerResponse response) {
+    private void handleRequest(HttpServerRequest httpRequest, REQUEST request, HttpServerResponse response) {
         // Check authorization
         boolean authorized = isAuthorized(request);
         if (authorized) {
-            handleAuthorized(request, response);
+            handleAuthorized(httpRequest, request, response);
         } else {
-            handleUnauthorized(response);
+            handleUnauthorized(httpRequest, response);
         }
     }
 
-    protected abstract void handleAuthorized(REQUEST request, HttpServerResponse response);
+    protected abstract void handleAuthorized(HttpServerRequest httpRequest, REQUEST request, HttpServerResponse response);
 
-    protected void handleUnauthorized(HttpServerResponse response) {
+    protected void handleUnauthorized(HttpServerRequest httpRequest, HttpServerResponse response) {
         // Return an Unauthorized response
         String message = "Unauthorized";
         handleResponse(401, message, TEXT_PLAIN, response);
