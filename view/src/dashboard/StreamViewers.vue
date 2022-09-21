@@ -4,13 +4,13 @@
     <tr>
       <th>IP Address</th>
       <th>Nick</th>
-      <th>Stream Size</th>
-      <th>Chat Opened</th>
-      <th>Window Visible</th>
-      <th>Full Screen</th>
-      <th>Stream Muted</th>
-      <th>Quality</th>
-      <th>Bandwidth</th>
+      <th style="width: 15em">Stream Size</th>
+      <th style="width: 15em">Chat Opened</th>
+      <th style="width: 15em">Window Visible</th>
+      <th style="width: 15em">Full Screen</th>
+      <th style="width: 15em">Stream Muted</th>
+      <th style="width: 25em">Quality</th>
+      <th style="width: 25em">Bandwidth</th>
     </tr>
     <template v-for="t in telemetry">
       <tr>
@@ -33,13 +33,35 @@
 </template>
 
 <script>
+  import {mapGetters, mapState} from 'vuex';
+  import axios from 'axios';
+
   export default {
     name: 'stream-viewers',
     data () {
-      return { };
+      return {
+        telemetry: []
+      };
     },
-    props: {
-      telemetry: null
+    computed: {
+      ...mapState('apiKey', ['apiKey']),
+      needApiKey() {
+        return this.apiKey == null || this.apiKey.length === 0;
+      },
+    },
+    mounted() {
+      var self = this;
+      // establish telemetry listener
+      function establishTelemetryListener() {
+        const url = new URL('/telemetry/fetch', window.location.href);
+        axios.post(url.href, {
+          key: self.apiKey
+        }).then(response => {
+          self.telemetry = response.data;
+          setTimeout(establishTelemetryListener, 1000);
+        });
+      }
+      establishTelemetryListener();
     }
   }
 </script>
