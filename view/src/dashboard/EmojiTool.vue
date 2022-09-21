@@ -20,6 +20,9 @@
             <strong>Please wait...</strong>
           </div>
         </template>
+        <template #cell(icon)="data">
+          <img class="emoji-icon" :src="data.item.url" height="28" width="28">
+        </template>
         <template #cell(name)="data">
           {{ data.value }}
         </template>
@@ -81,6 +84,7 @@
           show: false
         },
         fields: [
+          { key: "icon", label: "", class: 'emojiIcon' },
           { key: "name", label: "Name", class: 'emojiName' },
           { key: "url", label: "URL", class: 'emojiUrl' }
         ]
@@ -165,6 +169,12 @@
   }
   .max30w {
     max-width: calc(30vw - 100pt);
+  }
+  .emojiIcon {
+    width: 32px;
+  }
+  img.emoji-icon {
+    vertical-align: middle;
   }
   .emojiName {
     text-align: left;
