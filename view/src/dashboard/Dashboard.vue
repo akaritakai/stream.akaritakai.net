@@ -194,9 +194,8 @@
               </b-tab>
             </b-tabs>
           </b-tab>
-          <b-tab title="Info">
-            <textarea readonly rows="25" class="form-control monospace" style="min-width:500px;max-width:100%;min-height:50px;height:100%;width:100%;" v-model="form.info.body">
-            </textarea>
+          <b-tab title="Server Log">
+            <server-log/>
           </b-tab>
         </b-tabs>
       </div>
@@ -237,6 +236,11 @@
     /* webpackPrefetch: true */
     './EmojiTool.vue');
 
+  const ServerLog = () => import(
+    /* webpackChunkName: "serverLog" */
+    /* webpackPrefetch: true */
+    './ServerLog.vue');
+
   Vue.use(BootstrapVue);
   Vue.use(AlertPlugin);
 
@@ -245,7 +249,8 @@
     components: {
       StreamViewers,
       ChatLog,
-      EmojiTool
+      EmojiTool,
+      ServerLog
     },
     data() {
       return {
@@ -286,9 +291,6 @@
             items: [],
             selected: null,
             inProgress: false
-          },
-          info: {
-            body: 'placeholder'
           }
         },
         selectionFilter: '',
@@ -438,21 +440,6 @@
         });
       }
       establishTelemetryListener();
-
-      function establishLogListener() {
-        const url = new URL('/log/fetch', window.location.href);
-        const instance = axios.create({
-          onDownloadProgress: event => {
-            dashboard.form.info.body = event.currentTarget.response;
-          }
-        });
-        instance.post(url.href, {
-          key: dashboard.apiKey
-        }).then(response => {
-          setTimeout(establishLogListener, 1000);
-        });
-      }
-      establishLogListener();
     },
     methods: {
       alwaysTrue() {

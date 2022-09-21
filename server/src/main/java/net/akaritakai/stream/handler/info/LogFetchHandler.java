@@ -42,15 +42,20 @@ public class LogFetchHandler extends AbstractHandler<LogFetchRequest>
                 private boolean end;
                 @Override
                 public void accept(byte[] bytes) {
+                    if (httpRequest.isEnded()) {
+                        end = true;
+                    }
                     if (end) {
                         return;
                     }
                     try {
-                        response.write(Buffer.buffer(bytes)).onFailure(event -> {
-                            end = true;
-                            response.close();
-                        }).onSuccess(event -> {
-                        });
+                        if (bytes != null && bytes.length > 0) {
+                            response.write(Buffer.buffer(bytes)).onFailure(event -> {
+                                end = true;
+                                response.close();
+                            }).onSuccess(event -> {
+                            });
+                        }
                         _waitForBytes.thenAccept(this);
                         return;
                     } catch (Exception e) {
@@ -59,6 +64,7 @@ public class LogFetchHandler extends AbstractHandler<LogFetchRequest>
                     response.close();
                 }
             });
+            LOG.info("log listener from {}", httpRequest.remoteAddress());
         } catch (Exception e) {
             handleFailure("Failed", response, e);
         }
