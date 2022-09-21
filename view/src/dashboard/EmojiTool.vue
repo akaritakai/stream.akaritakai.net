@@ -50,15 +50,6 @@
         </div>
       </b-form>
     </td>
-    </tr><tr>
-    <td colspan=2>
-      <div class="alert alert-success" role="alert" v-if="result.show && result.success">
-        {{ result.message }}
-      </div>
-      <div class="alert alert-danger" role="alert" v-if="result.show && !result.success">
-        {{ result.message }}
-      </div>
-    </td>
     </tr></tbody>
   </table>
 </template>
@@ -78,11 +69,6 @@
         filter: '',
         selected: [],
         selectionFilter: '',
-        result: {
-          message: '',
-          success: false,
-          show: false
-        },
         fields: [
           { key: "icon", label: "", class: 'emojiIcon' },
           { key: "name", label: "Name", class: 'emojiName' },
@@ -127,13 +113,10 @@
         })
       },
       showResult(successValue, messageValue) {
-        var result = {
+        this.$emit("showResult", {
           message: messageValue,
-          success: successValue,
-          show: true
-        }
-        this.result = result;
-        setTimeout(function() { result.show = false }, 10000)
+          success: successValue
+        });
       },
       updateEmoji() {
         this.inProgress = true;

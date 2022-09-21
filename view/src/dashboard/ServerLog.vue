@@ -55,11 +55,19 @@
         }).then(result => {
           establishLogListener();
         }).catch(err => {
-          console.error("log read error: " + err);
+          view.showResult(false, "log read error: " + err);
           setTimeout(establishLogListener, 1000);
         });
       }
       establishLogListener();
+    },
+    methods: {
+      showResult(successValue, messageValue) {
+        this.$emit("showResult", {
+          message: messageValue,
+          success: successValue
+        });
+      },
     }
   }
 </script>
