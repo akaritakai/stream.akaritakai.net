@@ -27,7 +27,7 @@ class Stream():
     if len(self.args.COMMAND) != 4:
       print("missing args")
       return
-    args={'key':self.args.apiKey,'live':self.args.COMMAND[2] in ['true','yes','y','1','t'],'name':self.args.COMMAND[3]}
+    args={'key':self.args.apiKey,'name':self.args.COMMAND[3]}
     if self.args.delay is not None:
       args['delay']=self.args.delay.to_miliseconds()
     if self.args.seekTime is not None:
