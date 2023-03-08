@@ -43,7 +43,7 @@ public class Chat {
                     if (entry.getKey().isBlank()) {
                         throw new IllegalArgumentException("key name can't be blank");
                     }
-                    chatManager.setCustomEmoji(":" + entry.getKey() + ":", new URL(entry.getValue()));
+                    chatManager.setCustomEmoji(":" + entry.getKey() + ":", new URL(entry.getValue()).toString());
                 }
             }
         }

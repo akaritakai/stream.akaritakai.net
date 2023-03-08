@@ -32,7 +32,7 @@ public class ChatSetEmojiHandler extends AbstractHandler<ChatSetEmojisRequest> {
   @Override
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatSetEmojisRequest request, HttpServerResponse response) {
     try {
-      _chat.setCustomEmoji(request.getEmoji().getName(), request.getEmoji().getUrl());
+      _chat.setCustomEmoji(request.getEmoji().getName(), request.getEmoji().getUrl().toString());
 
       handleSuccess("OK", "text/plain", response);
 

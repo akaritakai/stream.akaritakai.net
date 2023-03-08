@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,8 @@ public class ChatHistory {
   private static final int CAPACITY = 500;
 
   private final Queue<ChatMessage> _queue = new ConcurrentLinkedQueue<>();
+
+  private final ConcurrentMap<String, String> _activeCustomMap = new ConcurrentHashMap<>();
 
   // Epoch information
   private final Instant _epoch = Instant.now();
@@ -81,6 +85,14 @@ public class ChatHistory {
         .epoch(_epoch)
         .position(_position.get())
         .build();
+  }
+
+  public void setActiveEmoji(String token, String content) {
+    _activeCustomMap.put(token, content);
+  }
+
+  public boolean isActiveEmoji(String token, String content) {
+    return Objects.equals(content, _activeCustomMap.get(token));
   }
 
   @Override
