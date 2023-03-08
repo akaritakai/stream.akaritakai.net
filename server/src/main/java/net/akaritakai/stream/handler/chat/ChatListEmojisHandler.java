@@ -10,6 +10,8 @@ import net.akaritakai.stream.models.chat.request.ChatListEmojisRequest;
 import net.akaritakai.stream.models.chat.response.ChatListEmojisResponse;
 import org.apache.commons.lang3.Validate;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +40,7 @@ public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest
   @Override
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatListEmojisRequest request, HttpServerResponse response) {
     try {
-      List<Map.Entry<String, URL>> entries = _chat.listEmojis(request.getFilter() != null && !request.getFilter().isBlank() ? new Predicate<>() {
+      List<Map.Entry<String, String>> entries = _chat.listEmojis(request.getFilter() != null && !request.getFilter().isBlank() ? new Predicate<>() {
         final Pattern pattern = Pattern.compile(request.getFilter().trim(), Pattern.CASE_INSENSITIVE);
 
         @Override
@@ -50,7 +52,7 @@ public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest
       List<ChatEmojiEntry> emojiEntries = new ArrayList<>(10);
       entries.forEach(entry -> emojiEntries.add(ChatEmojiEntry.builder()
               .name(entry.getKey())
-              .url(entry.getValue())
+              .url(toURL(entry.getValue()))
               .build()));
 
       ChatListEmojisResponse listResponse = ChatListEmojisResponse.builder()
@@ -63,6 +65,13 @@ public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest
 
     } catch (Throwable t) {
       handleFailure(response, t);
+    }
+  }
+  private static URL toURL(String url) {
+    try {
+      return new URL(url);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
     }
   }
 

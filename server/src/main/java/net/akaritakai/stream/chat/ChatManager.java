@@ -42,9 +42,7 @@ public class ChatManager {
   private final AtomicReference<ChatHistory> _history = new AtomicReference<>(null);
   private final Set<ChatListener> _listeners = ConcurrentHashMap.newKeySet();
 
-  private final ConcurrentMap<String, URL> _customEmojiMap = new ConcurrentHashMap<>();
-
-  private final ConcurrentMap<String, String> _activeCustomMap = new ConcurrentHashMap<>();
+  private final ConcurrentMap<String, String> _customEmojiMap = new ConcurrentHashMap<>();
   private final Scheduler _scheduler;
 
   public ChatManager(Vertx vertx, Scheduler scheduler) {
@@ -59,7 +57,7 @@ public class ChatManager {
       throw new ChatStateConflictException("Chat is disabled");
     } else {
       if (request.getMessageType() == ChatMessageType.EMOJI) {
-        _activeCustomMap.put(request.getNickname(), request.getMessage());
+        currentHistory.setActiveEmoji(request.getNickname(), request.getMessage());
       } else if (request.getMessageType() == ChatMessageType.TEXT) {
         StringTokenizer st = new StringTokenizer(request.getMessage());
         while (st.hasMoreTokens()) {
@@ -77,8 +75,8 @@ public class ChatManager {
               continue;
             }
           }
-          URL emoji = _customEmojiMap.get(token);
-          if (!String.valueOf(emoji).equals(_activeCustomMap.get(token))) {
+          String emoji = _customEmojiMap.get(token);
+          if (!currentHistory.isActiveEmoji(token, emoji)) {
             sendMessage(ChatSendRequest.builder()
                     .messageType(ChatMessageType.EMOJI)
                     .nickname(token)
@@ -221,7 +219,7 @@ public class ChatManager {
     }
   }
 
-  public List<Map.Entry<String, URL>> listEmojis(Predicate<String> matcher, int limit) {
+  public List<Map.Entry<String, String>> listEmojis(Predicate<String> matcher, int limit) {
       return _customEmojiMap.entrySet().stream()
               .filter(entry -> matcher.test(entry.getKey()))
               .limit(limit)
@@ -229,7 +227,7 @@ public class ChatManager {
               .collect(Collectors.toList());
   }
 
-  public void setCustomEmoji(String key, URL url) throws MalformedURLException {
+  public void setCustomEmoji(String key, String url) throws MalformedURLException {
     if (key.startsWith(":") && key.endsWith(":")) {
       _customEmojiMap.put(key, url);
     } else {
