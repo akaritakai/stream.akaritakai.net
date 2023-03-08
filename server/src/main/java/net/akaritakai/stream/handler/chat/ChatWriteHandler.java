@@ -4,14 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.commands.ChatWriteRequest;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
+import net.akaritakai.stream.scheduling.Utils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
 
 
 /**
@@ -21,11 +24,11 @@ public class ChatWriteHandler extends AbstractHandler<ChatWriteRequest> {
   private static final Logger LOG = LoggerFactory.getLogger(ChatWriteHandler.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final ChatManager _chat;
+  private final ChatManagerMBean _chat;
 
-  public ChatWriteHandler(ChatManager chat, CheckAuth checkAuth) {
+  public ChatWriteHandler(ObjectName chat, CheckAuth checkAuth) {
     super(ChatWriteRequest.class, checkAuth);
-    _chat = chat;
+    _chat = Utils.beanProxy(chat, ChatManagerMBean.class);
   }
   @Override
   protected void validateRequest(ChatWriteRequest request) {
@@ -35,11 +38,11 @@ public class ChatWriteHandler extends AbstractHandler<ChatWriteRequest> {
 
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatWriteRequest request, HttpServerResponse response) {
     try {
-      _chat.sendMessage(ChatSendRequest.builder()
+      _chat.sendMessage(OBJECT_MAPPER.writeValueAsString(ChatSendRequest.builder()
               .messageType(request.getMessageType())
               .nickname(request.getNickname())
               .message(request.getMessage())
-              .build(), Util.getIpAddressFromRequest(httpRequest));
+              .build()), Util.getIpAddressFromRequest(httpRequest));
       handleSuccess(response);
     } catch (Exception ex) {
       handleFailure(response, ex);

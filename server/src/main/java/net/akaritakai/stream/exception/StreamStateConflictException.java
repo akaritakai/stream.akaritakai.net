@@ -1,6 +1,8 @@
 package net.akaritakai.stream.exception;
 
-public class StreamStateConflictException extends Exception {
+import java.util.concurrent.CompletionException;
+
+public class StreamStateConflictException extends CompletionException {
 
   public StreamStateConflictException(String message) {
     super(message);

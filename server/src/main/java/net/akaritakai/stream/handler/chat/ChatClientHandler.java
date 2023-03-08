@@ -1,5 +1,6 @@
 package net.akaritakai.stream.handler.chat;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,36 +10,67 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.ServerWebSocket;
 import io.vertx.ext.web.RoutingContext;
-import net.akaritakai.stream.chat.ChatListener;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.ChatHistory;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.Util;
+import net.akaritakai.stream.models.chat.ChatMessage;
+import net.akaritakai.stream.models.chat.ChatSequence;
 import net.akaritakai.stream.models.chat.request.ChatJoinRequest;
 import net.akaritakai.stream.models.chat.request.ChatPartRequest;
 import net.akaritakai.stream.models.chat.request.ChatRequest;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
 import net.akaritakai.stream.models.chat.response.ChatMessageResponse;
 import net.akaritakai.stream.models.chat.response.ChatStatusResponse;
+import net.akaritakai.stream.scheduling.Utils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.AttributeChangeNotification;
+import javax.management.ObjectName;
 
 
 /**
  * Handles websocket requests to "/chat"
  */
-public class ChatClientHandler implements Handler<RoutingContext>, ChatListener {
+public class ChatClientHandler implements Handler<RoutingContext> {
   private static final Logger LOG = LoggerFactory.getLogger(ChatClientHandler.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final int MAX_MESSAGE_LENGTH = 32768;
 
   private final Vertx _vertx;
-  private final ChatManager _chat;
+  private final ChatManagerMBean _chat;
   private final Set<ServerWebSocket> _sockets = ConcurrentHashMap.newKeySet();
 
-  public ChatClientHandler(Vertx vertx, ChatManager chat) {
+  public ChatClientHandler(Vertx vertx, ObjectName chat) {
     _vertx = vertx;
-    _chat = chat;
-    _chat.addListener(this);
+    _chat = Utils.beanProxy(chat, ChatManagerMBean.class);
+    _chat.addNotificationListener(((notification, handback) -> {
+      assert this == handback;
+      ChatHistory newHistory;
+      ChatMessage chatMessage;
+      switch (notification.getMessage()) {
+        case "sendMessage":
+          chatMessage = (ChatMessage) ((AttributeChangeNotification) notification).getNewValue();
+          onMessage(ChatMessageResponse.builder().message(chatMessage).build());
+          break;
+        case "enableChat":
+        case "clearChat":
+          newHistory = (ChatHistory) ((AttributeChangeNotification) notification).getNewValue();
+          onStatus(ChatStatusResponse.builder()
+                  .enabled(true)
+                  .sequence(ChatSequence.builder()
+                          .epoch(newHistory.getEpoch())
+                          .position(0)
+                          .build())
+                  .messages(Collections.emptyList())
+                  .build());
+          break;
+        case "disableChat":
+          onStatus(ChatStatusResponse.builder().enabled(false).build());
+          break;
+      }
+    }), null, this);
   }
 
   @Override
@@ -55,7 +87,7 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
         ChatRequest request = OBJECT_MAPPER.readValue(textMessage, ChatRequest.class);
         if (request instanceof ChatJoinRequest) {
           try {
-            ChatStatusResponse status = _chat.joinChat((ChatJoinRequest) request);
+            ChatStatusResponse status = OBJECT_MAPPER.readValue(_chat.joinChat(OBJECT_MAPPER.writeValueAsString(request)), ChatStatusResponse.class);
             String response = OBJECT_MAPPER.writeValueAsString(status);
             socket.writeTextMessage(response);
           } catch (Exception e) {
@@ -67,7 +99,7 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
           try {
             validateChatSendRequest((ChatSendRequest) request);
             try {
-              _chat.sendMessage((ChatSendRequest) request, Util.getIpAddressFromRequest(event.request()));
+              _chat.sendMessage(OBJECT_MAPPER.writeValueAsString(request), Util.getIpAddressFromRequest(event.request()));
             } catch (Exception e) {
               // This should only occur if the server is not available
               LOG.warn("Unable to send chat message. Reason: {}: {}", e.getClass().getCanonicalName(), e.getMessage());
@@ -102,7 +134,6 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
             "message must not be more than " + MAX_MESSAGE_LENGTH + " characters");
   }
 
-  @Override
   public void onStatus(ChatStatusResponse status) {
     try {
       String response = OBJECT_MAPPER.writeValueAsString(status);
@@ -112,7 +143,6 @@ public class ChatClientHandler implements Handler<RoutingContext>, ChatListener 
     }
   }
 
-  @Override
   public void onMessage(ChatMessageResponse message) {
     try {
       String response = OBJECT_MAPPER.writeValueAsString(message);

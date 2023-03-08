@@ -1,6 +1,8 @@
 package net.akaritakai.stream.exception;
 
-public class ChatStateConflictException extends Exception {
+import java.util.concurrent.CompletionException;
+
+public class ChatStateConflictException extends CompletionException {
 
   public ChatStateConflictException(String message) {
     super(message);

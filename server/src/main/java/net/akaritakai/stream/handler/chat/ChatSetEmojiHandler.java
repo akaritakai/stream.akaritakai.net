@@ -3,10 +3,13 @@ package net.akaritakai.stream.handler.chat;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.models.chat.request.ChatSetEmojisRequest;
+import net.akaritakai.stream.scheduling.Utils;
 import org.apache.commons.lang3.Validate;
+
+import javax.management.ObjectName;
 
 
 /**
@@ -14,11 +17,11 @@ import org.apache.commons.lang3.Validate;
  */
 public class ChatSetEmojiHandler extends AbstractHandler<ChatSetEmojisRequest> {
 
-  private final ChatManager _chat;
+  private final ChatManagerMBean _chat;
 
-  public ChatSetEmojiHandler(ChatManager chat, CheckAuth checkAuth) {
+  public ChatSetEmojiHandler(ObjectName chat, CheckAuth checkAuth) {
     super(ChatSetEmojisRequest.class, checkAuth);
-    _chat = chat;
+    _chat = Utils.beanProxy(chat, ChatManagerMBean.class);
   }
   @Override
   protected void validateRequest(ChatSetEmojisRequest request) {

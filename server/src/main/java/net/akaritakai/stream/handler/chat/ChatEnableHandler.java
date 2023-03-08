@@ -1,15 +1,22 @@
 package net.akaritakai.stream.handler.chat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.models.chat.commands.ChatEnableRequest;
+import net.akaritakai.stream.scheduling.Utils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.management.ObjectName;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 
 /**
@@ -19,11 +26,13 @@ public class ChatEnableHandler extends AbstractHandler<ChatEnableRequest> {
   private static final Logger LOG = LoggerFactory.getLogger(ChatEnableHandler.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final ChatManager _chat;
+  private final Vertx _vertx;
+  private final ObjectName _chat;
 
-  public ChatEnableHandler(ChatManager chat, CheckAuth checkAuth) {
+  public ChatEnableHandler(ObjectName chat, CheckAuth checkAuth, Vertx vertx) {
     super(ChatEnableRequest.class, checkAuth);
     _chat = chat;
+    _vertx = vertx;
   }
   @Override
   protected void validateRequest(ChatEnableRequest request) {
@@ -32,9 +41,23 @@ public class ChatEnableHandler extends AbstractHandler<ChatEnableRequest> {
   }
 
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatEnableRequest request, HttpServerResponse response) {
-    _chat.enableChat(request)
-        .onSuccess(event -> handleSuccess(response))
-        .onFailure(t -> handleFailure(response, t));
+    CompletableFuture
+            .runAsync(() -> {
+              try {
+                Utils.beanProxy(_chat, ChatManagerMBean.class).enableChat(OBJECT_MAPPER.writeValueAsString(request));
+              } catch (JsonProcessingException e) {
+                throw new CompletionException(e);
+              }
+            })
+            .whenComplete(((unused, ex) -> {
+              _vertx.runOnContext(event -> {
+                if (ex == null) {
+                  handleSuccess(response);
+                } else {
+                  handleFailure(response, ex);
+                }
+              });
+            }));
   }
 
   protected void handleFailure(HttpServerResponse response, Throwable t) {

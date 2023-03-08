@@ -1,20 +1,25 @@
 package net.akaritakai.stream.scheduling.jobs;
 
-import net.akaritakai.stream.chat.ChatManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.models.chat.commands.ChatEnableRequest;
 import net.akaritakai.stream.scheduling.Utils;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import javax.management.ObjectName;
+
 public class ChatEnableJob implements Job {
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         ChatEnableRequest request = ChatEnableRequest.builder()
                 .build();
-        ChatManager chatManager = Utils.get(context.getScheduler(), ChatManager.KEY);
+        ObjectName objectName = Utils.get(context.getScheduler(), ChatManagerMBean.KEY);
+        ChatManagerMBean chatManager = Utils.beanProxy(objectName, ChatManagerMBean.class);
         try {
-            chatManager.enableChat(request).toCompletionStage().toCompletableFuture().join();
+            chatManager.enableChat(objectMapper.writeValueAsString(request));
         } catch (Exception e) {
             throw new JobExecutionException(e);
         }

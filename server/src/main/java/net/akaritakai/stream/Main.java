@@ -26,6 +26,7 @@ import net.akaritakai.stream.handler.telemetry.TelemetrySendHandler;
 import net.akaritakai.stream.scheduling.SetupScheduler;
 import net.akaritakai.stream.scheduling.Utils;
 import net.akaritakai.stream.streamer.Streamer;
+import net.akaritakai.stream.streamer.StreamerMBean;
 import net.akaritakai.stream.telemetry.TelemetryStore;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -35,9 +36,12 @@ import org.quartz.Scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -97,6 +101,8 @@ public class Main {
 
     LOG.info("Loaded config {}", config);
 
+    MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+
     ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByMimeType("application/javascript");
     LOG.info("ScriptEngine: {}", scriptEngine);
 
@@ -106,12 +112,17 @@ public class Main {
     CheckAuth auth = new CheckAuthImpl(
             Optional.ofNullable(ns.getString("apiKey")).orElse(config.getApiKey()));
 
+    ObjectName streamerName = new ObjectName("net.akaritakai.stream:type=Streamer");
+    ObjectName chatManagerName = new ObjectName("net.akaritakai.stream:type=ChatManager");
+
     Vertx vertx = Vertx.vertx();
     Router router = Router.router(vertx);
     Streamer streamer = new Streamer(vertx, config, scheduler);
     TelemetryStore telemetryStore = new TelemetryStore();
 
-    Utils.set(scheduler, Streamer.KEY, streamer);
+    mBeanServer.registerMBean(streamer, streamerName);
+
+    Utils.set(scheduler, StreamerMBean.KEY, streamerName);
 
     if (config.isLogRequestInfo()) {
       router.route().handler(event -> {
@@ -125,25 +136,25 @@ public class Main {
     }
 
     router.get("/stream/status")
-        .handler(new StreamStatusHandler(vertx, streamer));
+        .handler(new StreamStatusHandler(vertx, streamerName));
 
     router.post("/stream/start")
         .handler(BodyHandler.create())
-        .handler(new StartCommandHandler(streamer, auth));
+        .handler(new StartCommandHandler(streamerName, auth, vertx));
     router.post("/stream/stop")
         .handler(BodyHandler.create())
-        .handler(new StopCommandHandler(streamer, auth));
+        .handler(new StopCommandHandler(streamerName, auth));
     router.post("/stream/pause")
         .handler(BodyHandler.create())
-        .handler(new PauseCommandHandler(streamer, auth));
+        .handler(new PauseCommandHandler(streamerName, auth, vertx));
     router.post("/stream/resume")
         .handler(BodyHandler.create())
-        .handler(new ResumeCommandHandler(streamer, auth));
+        .handler(new ResumeCommandHandler(streamerName, auth, vertx));
     router.post("/stream/dir")
         .handler(BodyHandler.create())
         .handler(new DirCommandHandler(streamer, auth));
 
-    new Chat(vertx, router, scheduler, auth)
+    new Chat(vertx, router, scheduler, auth, mBeanServer, chatManagerName)
             .addCustomEmojis(Optional.ofNullable(ns.getString("emojisFile")).map(File::new)
                     .orElse(Optional.ofNullable(config.getEmojisFile()).map(File::new).orElse(null)))
             .install();

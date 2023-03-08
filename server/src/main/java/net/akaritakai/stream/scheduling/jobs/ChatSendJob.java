@@ -1,7 +1,7 @@
 package net.akaritakai.stream.scheduling.jobs;
 
-import net.akaritakai.stream.chat.ChatManager;
-import net.akaritakai.stream.exception.ChatStateConflictException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.ChatMessageType;
 import net.akaritakai.stream.models.chat.request.ChatSendRequest;
@@ -10,7 +10,10 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import javax.management.ObjectName;
+
 public class ChatSendJob implements Job {
+    private final ObjectMapper objectMapper = new ObjectMapper();
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         ChatSendRequest request = ChatSendRequest.builder()
@@ -18,10 +21,11 @@ public class ChatSendJob implements Job {
                 .nickname(context.get("nickname").toString())
                 .message(context.get("message").toString())
                 .build();
-        ChatManager chatManager = Utils.get(context.getScheduler(), ChatManager.KEY);
+        ObjectName objectName = Utils.get(context.getScheduler(), ChatManagerMBean.KEY);
+        ChatManagerMBean chatManager = Utils.beanProxy(objectName, ChatManagerMBean.class);
         try {
-            chatManager.sendMessage(request, Util.ANY);
-        } catch (ChatStateConflictException e) {
+            chatManager.sendMessage(objectMapper.writeValueAsString(request), Util.ANY);
+        } catch (Exception e) {
             throw new JobExecutionException(e);
         }
     }

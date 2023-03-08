@@ -11,7 +11,6 @@ import net.akaritakai.stream.models.chat.response.ChatListEmojisResponse;
 import org.apache.commons.lang3.Validate;
 
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;

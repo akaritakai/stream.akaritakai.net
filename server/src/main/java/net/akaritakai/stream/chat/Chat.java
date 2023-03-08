@@ -1,20 +1,18 @@
 package net.akaritakai.stream.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import net.akaritakai.stream.CheckAuth;
-import net.akaritakai.stream.config.ConfigData;
 import net.akaritakai.stream.handler.chat.*;
 import net.akaritakai.stream.scheduling.Utils;
 import org.quartz.Scheduler;
 
+import javax.management.*;
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
@@ -23,15 +21,21 @@ public class Chat {
     private final Router router;
     private final ChatManager chatManager;
     private final CheckAuth checkAuth;
+    private final ObjectName chatManagerName;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Chat(Vertx vertx, Router router, Scheduler scheduler, CheckAuth checkAuth) {
+    public Chat(Vertx vertx, Router router, Scheduler scheduler, CheckAuth checkAuth,
+                MBeanServer mBeanServer, ObjectName chatManagerName)
+            throws NotCompliantMBeanException, InstanceAlreadyExistsException, MBeanRegistrationException {
         this.vertx = vertx;
         this.router = router;
-        this.chatManager = new ChatManager(vertx, scheduler);
+        this.chatManager = new ChatManager(scheduler);
         this.checkAuth = checkAuth;
-        Utils.set(scheduler, ChatManager.KEY, chatManager);
+        this.chatManagerName = chatManagerName;
+
+        mBeanServer.registerMBean(chatManager, chatManagerName);
+        Utils.set(scheduler, ChatManagerMBean.KEY, chatManagerName);
     }
 
     public Chat addCustomEmojis(File jsonFile) throws IOException {
@@ -53,23 +57,23 @@ public class Chat {
     public void install() {
         router.post("/chat/clear")
                 .handler(BodyHandler.create())
-                .handler(new ChatClearHandler(chatManager, checkAuth));
+                .handler(new ChatClearHandler(chatManagerName, checkAuth, vertx));
         router.post("/chat/disable")
                 .handler(BodyHandler.create())
-                .handler(new ChatDisableHandler(chatManager, checkAuth));
+                .handler(new ChatDisableHandler(chatManagerName, checkAuth, vertx));
         router.post("/chat/enable")
                 .handler(BodyHandler.create())
-                .handler(new ChatEnableHandler(chatManager, checkAuth));
+                .handler(new ChatEnableHandler(chatManagerName, checkAuth, vertx));
         router.post("/chat/write")
                 .handler(BodyHandler.create())
-                .handler(new ChatWriteHandler(chatManager, checkAuth));
+                .handler(new ChatWriteHandler(chatManagerName, checkAuth));
         router.post("/chat/emojis")
                 .handler(BodyHandler.create())
                 .handler(new ChatListEmojisHandler(chatManager, checkAuth));
         router.post("/chat/emoji")
                 .handler(BodyHandler.create())
-                .handler(new ChatSetEmojiHandler(chatManager, checkAuth));
+                .handler(new ChatSetEmojiHandler(chatManagerName, checkAuth));
         router.get("/chat")
-                .handler(new ChatClientHandler(vertx, chatManager));
+                .handler(new ChatClientHandler(vertx, chatManagerName));
     }
 }

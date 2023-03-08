@@ -1,5 +1,6 @@
 package net.akaritakai.stream.models.stream;
 
+import java.beans.ConstructorProperties;
 import java.time.Duration;
 import java.time.Instant;
 

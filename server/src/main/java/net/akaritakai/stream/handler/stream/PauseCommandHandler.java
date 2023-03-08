@@ -1,22 +1,29 @@
 package net.akaritakai.stream.handler.stream;
 
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.models.stream.request.StreamPauseRequest;
-import net.akaritakai.stream.streamer.Streamer;
+import net.akaritakai.stream.scheduling.Utils;
+import net.akaritakai.stream.streamer.StreamerMBean;
 import org.apache.commons.lang3.Validate;
+
+import javax.management.ObjectName;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Handles the "POST /stream/pause" command.
  */
 public class PauseCommandHandler extends AbstractHandler<StreamPauseRequest> {
-  private final Streamer _streamer;
+  private final Vertx _vertx;
+  private final StreamerMBean _streamer;
 
-  public PauseCommandHandler(Streamer streamer, CheckAuth checkAuth) {
+  public PauseCommandHandler(ObjectName streamer, CheckAuth checkAuth, Vertx vertx) {
     super(StreamPauseRequest.class, checkAuth);
-    _streamer = streamer;
+    _streamer = Utils.beanProxy(streamer, StreamerMBean.class);
+    _vertx = vertx;
   }
 
   protected void validateRequest(StreamPauseRequest request) {
@@ -25,9 +32,19 @@ public class PauseCommandHandler extends AbstractHandler<StreamPauseRequest> {
   }
 
   protected void handleAuthorized(HttpServerRequest httpRequest, StreamPauseRequest request, HttpServerResponse response) {
-    _streamer.pauseStream(request)
-        .onSuccess(event -> handleSuccess(response))
-        .onFailure(t -> handleFailure(response, t));
+    CompletableFuture
+            .completedStage(request)
+            .thenApplyAsync(Utils::writeAsString)
+            .thenAcceptAsync(_streamer::pauseStream)
+            .whenComplete(((unused, ex) -> {
+              _vertx.runOnContext(event -> {
+                if (ex == null) {
+                  handleSuccess(response);
+                } else {
+                  handleFailure(response, ex);
+                }
+              });
+            }));
   }
 
   private void handleFailure(HttpServerResponse response, Throwable t) {
