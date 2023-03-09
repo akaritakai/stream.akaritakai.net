@@ -2,6 +2,7 @@ package net.akaritakai.stream.handler.info;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
@@ -36,8 +37,8 @@ public class LogFetchHandler extends AbstractHandler<LogFetchRequest>
         try {
             response.setStatusCode(200)
                     .setChunked(true)
-                    .putHeader("Content-Type", "text/plain")
-                    .putHeader("Cache-Control", "no-store");
+                    .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
+                    .putHeader(HttpHeaders.CACHE_CONTROL, "no-store");
             _waitForBytes.thenAccept(new Consumer<byte[]>() {
                 private boolean end;
                 @Override

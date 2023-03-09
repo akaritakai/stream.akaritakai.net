@@ -41,7 +41,7 @@ public class StreamState {
     StreamStateBuilder mediaDuration(Duration mediaDuration);
     @JsonDeserialize(converter = NumberToInstantConverter.class)
     StreamStateBuilder startTime(Instant startTime);
-    @JsonDeserialize(converter = InstantToNumberConverter.class)
+    @JsonDeserialize(converter = NumberToInstantConverter.class)
     StreamStateBuilder endTime(Instant endTime);
     @JsonDeserialize(converter = NumberToDurationConverter.class)
     StreamStateBuilder seekTime(Duration seekTime);

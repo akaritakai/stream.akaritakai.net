@@ -2,7 +2,9 @@ package net.akaritakai.stream.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
+import io.netty.handler.codec.http.HttpResponse;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
@@ -28,7 +30,8 @@ public abstract class AbstractHandler<REQUEST> implements Handler<RoutingContext
     @Override
     public void handle(RoutingContext event) {
         try {
-            byte[] payload = event.getBody().getBytes();
+            //REQUEST request = event.body().asPojo(_requestClass);
+            byte[] payload = event.body().buffer().getBytes();
             REQUEST request = OBJECT_MAPPER.readValue(payload, _requestClass);
             validateRequest(request);
             handleRequest(event.request(), request, event.response());
@@ -79,9 +82,9 @@ public abstract class AbstractHandler<REQUEST> implements Handler<RoutingContext
 
     protected void handleResponse(int statusCode, String message, String contentType, HttpServerResponse response) {
         response.setStatusCode(statusCode); // OK
-        response.putHeader("Cache-Control", "no-store");
-        response.putHeader("Content-Length", String.valueOf(message.length()));
-        response.putHeader("Content-Type", contentType);
+        response.putHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+        response.putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(message.length()));
+        response.putHeader(HttpHeaders.CONTENT_TYPE, contentType);
         response.end(message);
     }
 }

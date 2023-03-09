@@ -1,6 +1,7 @@
 package net.akaritakai.stream.handler;
 
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -11,9 +12,9 @@ public class HealthCheckHandler implements Handler<RoutingContext> {
   public void handle(RoutingContext event) {
     String message = "OK";
     event.response().setStatusCode(200); // OK
-    event.response().putHeader("Cache-Control", "no-store");
-    event.response().putHeader("Content-Length", String.valueOf(message.length()));
-    event.response().putHeader("Content-Type", "text/plain");
+    event.response().putHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+    event.response().putHeader(HttpHeaders.CONTENT_LENGTH, String.valueOf(message.length()));
+    event.response().putHeader(HttpHeaders.CONTENT_TYPE, "text/plain");
     event.response().end(message);
   }
 }
