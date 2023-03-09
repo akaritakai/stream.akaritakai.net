@@ -27,7 +27,7 @@ public final class SetupScheduler {
         schedulerProperties.setProperty("org.quartz.threadPool.class", org.quartz.simpl.SimpleThreadPool.class.getName());
         schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "4");
         schedulerProperties.setProperty("org.quartz.jobStore.class", org.quartz.impl.jdbcjobstore.JobStoreTX.class.getName());
-        schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", org.quartz.impl.jdbcjobstore.StdJDBCDelegate.class.getName());
+        schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", SqlLiteJDBCDelegate.class.getName());
         schedulerProperties.setProperty("org.quartz.jobStore.dataSource", "myDS");
         schedulerProperties.setProperty("org.quartz.jobStore.useProperties", "true");
         schedulerProperties.setProperty("org.quartz.dataSource.myDS.driver", JDBC.class.getName());
