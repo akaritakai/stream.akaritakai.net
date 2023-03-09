@@ -6,7 +6,6 @@ import net.akaritakai.stream.scheduling.Utils;
 import net.akaritakai.stream.streamer.StreamerMBean;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.UnableToInterruptJobException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ import java.util.*;
 import java.util.concurrent.FutureTask;
 import java.util.function.Consumer;
 
-public class ProcessJob implements InterruptableJob, ScriptContext {
+public class ProcessJob extends AbstractJob implements InterruptableJob, ScriptContext {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProcessJob.class);
     public static final SchedulerAttribute<ScriptEngine> SCRIPT_ENGINE
@@ -97,15 +96,13 @@ public class ProcessJob implements InterruptableJob, ScriptContext {
     }
 
     @Override
-    public synchronized void execute(JobExecutionContext context) throws JobExecutionException {
+    protected synchronized void execute0(JobExecutionContext context) throws Exception {
         engineScope = new SimpleBindings(context.getMergedJobDataMap());
         FutureTask<Object> task = new FutureTask<>(() -> task(context));
         try {
             this.task = task;
             task.run();
             context.setResult(task.get());
-        } catch (Exception e) {
-            throw new JobExecutionException(e);
         } finally {
             if (!task.isDone()) {
                 task.cancel(true);
