@@ -33,6 +33,7 @@ import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,7 +116,9 @@ public class Main {
     ObjectName streamerName = new ObjectName("net.akaritakai.stream:type=Streamer");
     ObjectName chatManagerName = new ObjectName("net.akaritakai.stream:type=ChatManager");
 
-    Vertx vertx = Vertx.vertx();
+    Vertx vertx = Vertx.vertx().exceptionHandler(ex -> {
+      LOG.error("Exception", ex);
+    });
     Router router = Router.router(vertx);
     Streamer streamer = new Streamer(vertx, config, scheduler);
     TelemetryStore telemetryStore = new TelemetryStore();
@@ -213,14 +216,19 @@ public class Main {
 
     SetupScheduler.setup(scheduler);
 
-    scheduler.start();
-
     vertx.createHttpServer()
         .requestHandler(router)
         .listen(Optional.ofNullable(ns.getInt("port")).orElse(config.getPort()), event -> {
           if (event.succeeded()) {
             LOG.info("Started the server on port {}", event.result().actualPort());
-            Utils.triggerIfExists(scheduler, "start");
+            try {
+              scheduler.startDelayed(1);
+              Utils.triggerIfExists(scheduler, "start");
+            } catch (SchedulerException e) {
+              LOG.error("Failed to start scheduler", e);
+              vertx.close().onComplete(ev -> System.exit(-1));
+              throw new RuntimeException(e);
+            }
           } else {
             LOG.error("Failed to start up the server", event.cause());
           }

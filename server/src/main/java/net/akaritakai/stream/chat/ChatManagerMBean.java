@@ -14,11 +14,11 @@ import java.util.function.Predicate;
 public interface ChatManagerMBean extends NotificationEmitter {
     SchedulerAttribute<ObjectName> KEY = SchedulerAttribute.instanceOf(ChatManagerMBean.class.getName(), ObjectName.class) ;
 
-    void sendMessage(String chatSendRequest, InetAddress source);
+    void sendMessage(String chatSendRequest);
     void disableChat(String chatDisableRequest);
     void enableChat(String chatEnableRequest);
     public void clearChat(String chatClearRequest);
     String joinChat(String chatJoinRequest) throws JsonProcessingException;
-    List<Map.Entry<String, String>> listEmojis(String regexp, int limit);
+    List<String> listEmojis(String regexp, int limit);
     void setCustomEmoji(String key, String url);
 }

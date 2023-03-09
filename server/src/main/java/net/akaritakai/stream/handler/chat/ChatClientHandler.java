@@ -99,7 +99,12 @@ public class ChatClientHandler implements Handler<RoutingContext> {
           try {
             validateChatSendRequest((ChatSendRequest) request);
             try {
-              _chat.sendMessage(OBJECT_MAPPER.writeValueAsString(request), Util.getIpAddressFromRequest(event.request()));
+              _chat.sendMessage(OBJECT_MAPPER.writeValueAsString(ChatSendRequest.builder()
+                      .messageType(((ChatSendRequest) request).getMessageType())
+                      .nickname(((ChatSendRequest) request).getNickname())
+                      .message(((ChatSendRequest) request).getMessage())
+                      .source(Util.getIpAddressFromRequest(event.request()))
+                      .build()));
             } catch (Exception e) {
               // This should only occur if the server is not available
               LOG.warn("Unable to send chat message. Reason: {}: {}", e.getClass().getCanonicalName(), e.getMessage());

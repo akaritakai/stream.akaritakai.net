@@ -1,6 +1,5 @@
 package net.akaritakai.stream.chat;
 
-import java.net.InetAddress;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +12,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.vertx.core.json.JsonObject;
 import net.akaritakai.stream.exception.ChatStateConflictException;
 import net.akaritakai.stream.handler.Util;
 import net.akaritakai.stream.models.chat.ChatMessage;
@@ -50,15 +50,15 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
   }
 
   @Override
-  public void sendMessage(String request, InetAddress source) {
+  public void sendMessage(String request) {
     try {
-      sendMessage(OBJECT_MAPPER.readValue(request, ChatSendRequest.class), source);
+      sendMessage(OBJECT_MAPPER.readValue(request, ChatSendRequest.class));
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public void sendMessage(ChatSendRequest request, InetAddress source) {
+  public void sendMessage(ChatSendRequest request) {
     LOG.debug("Got ChatSendRequest = {}", request);
     ChatHistory currentHistory = _history.get();
     if (currentHistory == null) {
@@ -89,11 +89,12 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
                     .messageType(ChatMessageType.EMOJI)
                     .nickname(token)
                     .message(String.valueOf(emoji))
-                    .build(), Util.ANY);
+                    .source(Util.ANY)
+                    .build());
           }
         }
       }
-      ChatMessage message = currentHistory.addMessage(request, source);
+      ChatMessage message = currentHistory.addMessage(request);
       Notification n = new AttributeChangeNotification(this, _sequenceNumber.getAndIncrement(), System.currentTimeMillis(),
               "sendMessage", "Message", ChatMessage.class.getName(), null, message);
       sendNotification(n);
@@ -101,6 +102,7 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
       jobDataMap.put("type", String.valueOf(request.getMessageType()));
       jobDataMap.put("nick", request.getNickname());
       jobDataMap.put("message", request.getMessage());
+      jobDataMap.put("source", request.getSource());
       Utils.triggerIfExists(_scheduler, "Message", "Chat", jobDataMap);
     }
   }
@@ -220,7 +222,7 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
   }
 
   @Override
-  public List<Map.Entry<String, String>> listEmojis(String regexp, int limit) {
+  public List<String> listEmojis(String regexp, int limit) {
     return listEmojis(regexp != null && !regexp.isBlank() ? new Predicate<>() {
       final Pattern pattern = Pattern.compile(regexp.trim(), Pattern.CASE_INSENSITIVE);
 
@@ -231,12 +233,17 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
     } : any -> true, limit);
   }
 
-  public List<Map.Entry<String, String>> listEmojis(Predicate<String> matcher, int limit) {
+  public List<String> listEmojis(Predicate<String> matcher, int limit) {
       return _customEmojiMap.entrySet().stream()
               .filter(entry -> matcher.test(entry.getKey()))
               .limit(limit)
               .sorted(Map.Entry.comparingByKey())
+              .map(this::toJson)
               .collect(Collectors.toList());
+  }
+
+  private String toJson(Map.Entry<String, String> entry) {
+    return JsonObject.of("key", entry.getKey(), "value", entry.getValue()).toString();
   }
 
   @Override
