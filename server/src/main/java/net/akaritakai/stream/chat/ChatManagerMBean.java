@@ -7,6 +7,7 @@ import net.akaritakai.stream.scheduling.SchedulerAttribute;
 import javax.management.NotificationEmitter;
 import javax.management.ObjectName;
 import java.net.InetAddress;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -20,5 +21,9 @@ public interface ChatManagerMBean extends NotificationEmitter {
     public void clearChat(String chatClearRequest);
     String joinChat(String chatJoinRequest) throws JsonProcessingException;
     List<String> listEmojis(String regexp, int limit);
-    void setCustomEmoji(String key, String url);
+    void setCustomEmoji(String token, String url);
+    String getCustomEmoji(String token);
+    long getPosition();
+    Instant getEpoch();
+    boolean isEnabled();
 }

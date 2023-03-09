@@ -294,6 +294,41 @@ public class Streamer extends NotificationBroadcasterSupport implements Streamer
     }
   }
 
+  @Override
+  public String getStatus() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getStatus).orElse(StreamStateType.OFFLINE).name();
+  }
+
+  @Override
+  public boolean isLive() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::isLive).orElse(false);
+  }
+
+  @Override
+  public String getCurrentPlaylist() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getPlaylist).orElse(null);
+  }
+
+  @Override
+  public String getCurrentMediaName() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getMediaName).orElse(null);
+  }
+
+  @Override
+  public Duration getCurrentDuration() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getMediaDuration).orElse(null);
+  }
+
+  @Override
+  public Instant getCurrentStartTime() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getStartTime).orElse(null);
+  }
+
+  @Override
+  public Instant getCurrentEndTime() {
+    return Optional.ofNullable(getStreamState()).map(StreamState::getEndTime).orElse(null);
+  }
+
   public List<StreamEntry> listStreams0(Predicate<String> predicate) {
     return CompletableFuture.completedFuture(predicate)
             .thenApplyAsync(_client::listMetadataNames)

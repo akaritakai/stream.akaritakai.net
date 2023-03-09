@@ -83,12 +83,12 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
               continue;
             }
           }
-          String emoji = _customEmojiMap.get(token);
-          if (!currentHistory.isActiveEmoji(token, emoji)) {
+          String emoji = getCustomEmoji(token);
+          if (emoji != null && !currentHistory.isActiveEmoji(token, emoji)) {
             sendMessage(ChatSendRequest.builder()
                     .messageType(ChatMessageType.EMOJI)
                     .nickname(token)
-                    .message(String.valueOf(emoji))
+                    .message(emoji)
                     .source(Util.ANY)
                     .build());
           }
@@ -253,5 +253,27 @@ public class ChatManager extends NotificationBroadcasterSupport implements ChatM
     } else {
       throw new IllegalArgumentException("emoji starts and ends with a colon");
     }
+  }
+
+  @Override
+  public String getCustomEmoji(String key) {
+    return _customEmojiMap.get(key);
+  }
+
+  @Override
+  public long getPosition() {
+    ChatHistory history = _history.get();
+    return history != null ? history.position() : -1;
+  }
+
+  @Override
+  public Instant getEpoch() {
+    ChatHistory history = _history.get();
+    return history != null ? history.getEpoch() : null;
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return _history.get() != null;
   }
 }

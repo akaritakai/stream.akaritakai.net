@@ -56,7 +56,7 @@ public class ChatHistory {
       LOG.info("addMessage({})", message);
     }
 
-    if (_position.get() > CAPACITY) {
+    if (_queue.size() > CAPACITY) {
       _queue.remove();
     }
 
@@ -82,7 +82,7 @@ public class ChatHistory {
   public ChatSequence getSequence() {
     return ChatSequence.builder()
         .epoch(_epoch)
-        .position(_position.get())
+        .position(position())
         .build();
   }
 
@@ -94,11 +94,15 @@ public class ChatHistory {
     return Objects.equals(content, _activeCustomMap.get(token));
   }
 
+  public long position() {
+    return _position.longValue();
+  }
+
   @Override
   public String toString() {
     return new JsonObject()
         .put("epoch", _epoch.toEpochMilli())
-        .put("position", _position.get())
+        .put("position", position())
         .put("messages", _queue.toString())
         .toString();
   }
