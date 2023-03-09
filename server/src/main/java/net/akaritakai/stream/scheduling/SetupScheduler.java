@@ -26,12 +26,14 @@ public final class SetupScheduler {
         Properties schedulerProperties = new Properties();
         schedulerProperties.setProperty("org.quartz.threadPool.class", org.quartz.simpl.SimpleThreadPool.class.getName());
         schedulerProperties.setProperty("org.quartz.threadPool.threadCount", "4");
-        schedulerProperties.setProperty("org.quartz.jobStore.class", org.quartz.impl.jdbcjobstore.JobStoreTX.class.getName());
+        schedulerProperties.setProperty("org.quartz.jobStore.class", SqlLiteJobStoreTX.class.getName());
         schedulerProperties.setProperty("org.quartz.jobStore.driverDelegateClass", SqlLiteJDBCDelegate.class.getName());
         schedulerProperties.setProperty("org.quartz.jobStore.dataSource", "myDS");
         schedulerProperties.setProperty("org.quartz.jobStore.useProperties", "true");
         schedulerProperties.setProperty("org.quartz.dataSource.myDS.driver", JDBC.class.getName());
         schedulerProperties.setProperty("org.quartz.dataSource.myDS.URL", "jdbc:sqlite:scheduler.db");
+        schedulerProperties.setProperty("org.quartz.scheduler.jmx.export", "true");
+        schedulerProperties.setProperty("org.quartz.scheduler.jmx.objectName", "net.akaritakai.stream:type=Scheduler");
 
         try (Connection connection = DriverManager.getConnection(schedulerProperties.getProperty("org.quartz.dataSource.myDS.URL"));
              ResultSet rs = connection.createStatement().executeQuery("SELECT COUNT(*) FROM QRTZ_LOCKS")) {

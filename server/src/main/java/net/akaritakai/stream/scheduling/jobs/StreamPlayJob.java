@@ -1,12 +1,10 @@
 package net.akaritakai.stream.scheduling.jobs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.akaritakai.stream.json.NumberToDurationConverter;
 import net.akaritakai.stream.json.NumberToInstantConverter;
 import net.akaritakai.stream.models.stream.StreamState;
 import net.akaritakai.stream.models.stream.request.StreamStartRequest;
 import net.akaritakai.stream.models.stream.request.StreamStopRequest;
-import net.akaritakai.stream.scheduling.Utils;
 import net.akaritakai.stream.streamer.StreamerMBean;
 import org.quartz.InterruptableJob;
 import org.quartz.JobExecutionContext;
@@ -18,9 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
-public class StreamPlayJob implements InterruptableJob, NotificationListener {
+public class StreamPlayJob extends AbstractStreamJob implements InterruptableJob, NotificationListener {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private CountDownLatch countDownLatch;
 
     @Override
@@ -44,32 +41,26 @@ public class StreamPlayJob implements InterruptableJob, NotificationListener {
     }
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-        ObjectName objectName = Utils.get(context.getScheduler(), StreamerMBean.KEY);
-        StreamerMBean streamer = Utils.beanProxy(objectName, StreamerMBean.class);
+    protected void execute1(JobExecutionContext context, StreamerMBean streamer) throws Exception {
         Handback handback = new Handback(buildRequest(context));
+
+        streamer.addNotificationListener(this, null, handback);
         try {
             countDownLatch = handback.latch;
+            streamer.startStream(writeValueAsString(handback.request));
+            countDownLatch.await();
 
-            streamer.addNotificationListener(this, null, handback);
-            try {
-                streamer.startStream(objectMapper.writeValueAsString(handback.request));
-                countDownLatch.await();
+            StreamState state = readValue(streamer.getState(), StreamState.class);
 
-                StreamState state = objectMapper.readValue(streamer.getState(), StreamState.class);
-
-                if (handback.request.getName().equals(state.getMediaName())) {
-                    streamer.stopStream(objectMapper.writeValueAsString(StreamStopRequest.builder().build()));
-                }
-            } finally {
-                try {
-                    streamer.removeNotificationListener(this, null, handback);
-                } catch (ListenerNotFoundException e) {
-                    throw new JobExecutionException(e);
-                }
+            if (handback.request.getName().equals(state.getMediaName())) {
+                streamer.stopStream(writeValueAsString(StreamStopRequest.builder().build()));
             }
-        } catch (Exception e) {
-            throw new JobExecutionException(e);
+        } finally {
+            try {
+                streamer.removeNotificationListener(this, null, handback);
+            } catch (ListenerNotFoundException e) {
+                throw new JobExecutionException(e);
+            }
         }
     }
 

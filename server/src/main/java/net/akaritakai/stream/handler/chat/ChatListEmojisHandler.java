@@ -2,10 +2,12 @@ package net.akaritakai.stream.handler.chat;
 
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.Json;
 import net.akaritakai.stream.CheckAuth;
 import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.models.chat.ChatEmojiEntry;
+import net.akaritakai.stream.models.chat.Entry;
 import net.akaritakai.stream.models.chat.request.ChatListEmojisRequest;
 import net.akaritakai.stream.models.chat.response.ChatListEmojisResponse;
 import net.akaritakai.stream.scheduling.Utils;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.Validate;
 import javax.management.ObjectName;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +42,11 @@ public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest
   @Override
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatListEmojisRequest request, HttpServerResponse response) {
     try {
-      List<Map.Entry<String, String>> entries = _chat.listEmojis(request.getFilter(), 10);
+      List<String> entries = _chat.listEmojis(request.getFilter(), 10);
 
       List<ChatEmojiEntry> emojiEntries = new ArrayList<>(10);
-      entries.forEach(entry -> emojiEntries.add(ChatEmojiEntry.builder()
+      entries.stream().map(entry -> (Map.Entry<String, String>) Json.decodeValue(entry, Entry.class))
+              .forEach(entry -> emojiEntries.add(ChatEmojiEntry.builder()
               .name(entry.getKey())
               .url(toURL(entry.getValue()))
               .build()));

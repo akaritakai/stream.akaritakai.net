@@ -42,7 +42,8 @@ public class ChatWriteHandler extends AbstractHandler<ChatWriteRequest> {
               .messageType(request.getMessageType())
               .nickname(request.getNickname())
               .message(request.getMessage())
-              .build()), Util.getIpAddressFromRequest(httpRequest));
+              .source(Util.getIpAddressFromRequest(httpRequest))
+              .build()));
       handleSuccess(response);
     } catch (Exception ex) {
       handleFailure(response, ex);

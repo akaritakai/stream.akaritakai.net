@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Utils {
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     private static final WeakHashMap<Scheduler, ConcurrentMap<SchedulerAttribute<?>, AtomicReference<?>>> TRANSIENT
              = new WeakHashMap<>();
 
