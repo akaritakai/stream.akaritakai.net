@@ -152,7 +152,7 @@ public class Main {
         .handler(new ResumeCommandHandler(streamerName, auth, vertx));
     router.post("/stream/dir")
         .handler(BodyHandler.create())
-        .handler(new DirCommandHandler(streamer, auth));
+        .handler(new DirCommandHandler(streamerName, auth, vertx));
 
     new Chat(vertx, router, scheduler, auth, mBeanServer, chatManagerName)
             .addCustomEmojis(Optional.ofNullable(ns.getString("emojisFile")).map(File::new)

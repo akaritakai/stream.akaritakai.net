@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -277,18 +278,26 @@ public class Streamer extends NotificationBroadcasterSupport implements Streamer
     }
   }
 
-  public Future<List<StreamEntry>> listStreams(String filter) {
+  public List<String> listStreams(String filter) {
     try {
-      return _client.listMetadataNames(filter != null && !filter.isBlank() ? new Predicate<String>() {
+      Predicate<String> predicate = filter != null && !filter.isBlank() ? new Predicate<String>() {
         final Pattern pattern = Pattern.compile(filter.trim(), Pattern.CASE_INSENSITIVE);
 
         @Override
         public boolean test(String s) {
           return pattern.matcher(s).find();
         }
-      } : any -> true);
+      } : any -> true;
+      return listStreams0(predicate).stream().map(Utils::writeAsString).collect(Collectors.toList());
     } catch (java.util.regex.PatternSyntaxException ex) {
-      return Future.succeededFuture(Collections.emptyList());
+      return Collections.emptyList();
     }
+  }
+
+  public List<StreamEntry> listStreams0(Predicate<String> predicate) {
+    return CompletableFuture.completedFuture(predicate)
+            .thenApplyAsync(_client::listMetadataNames)
+            .thenCompose(Future::toCompletionStage)
+            .join();
   }
 }

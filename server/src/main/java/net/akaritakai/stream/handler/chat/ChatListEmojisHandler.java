@@ -3,20 +3,20 @@ package net.akaritakai.stream.handler.chat;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import net.akaritakai.stream.CheckAuth;
-import net.akaritakai.stream.chat.ChatManager;
+import net.akaritakai.stream.chat.ChatManagerMBean;
 import net.akaritakai.stream.handler.AbstractHandler;
 import net.akaritakai.stream.models.chat.ChatEmojiEntry;
 import net.akaritakai.stream.models.chat.request.ChatListEmojisRequest;
 import net.akaritakai.stream.models.chat.response.ChatListEmojisResponse;
+import net.akaritakai.stream.scheduling.Utils;
 import org.apache.commons.lang3.Validate;
 
+import javax.management.ObjectName;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 
 /**
@@ -24,11 +24,11 @@ import java.util.regex.Pattern;
  */
 public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest> {
 
-  private final ChatManager _chat;
+  private final ChatManagerMBean _chat;
 
-  public ChatListEmojisHandler(ChatManager chat, CheckAuth checkAuth) {
+  public ChatListEmojisHandler(ObjectName chat, CheckAuth checkAuth) {
     super(ChatListEmojisRequest.class, checkAuth);
-    _chat = chat;
+    _chat = Utils.beanProxy(chat, ChatManagerMBean.class);
   }
   @Override
   protected void validateRequest(ChatListEmojisRequest request) {
@@ -39,14 +39,7 @@ public class ChatListEmojisHandler extends AbstractHandler<ChatListEmojisRequest
   @Override
   protected void handleAuthorized(HttpServerRequest httpRequest, ChatListEmojisRequest request, HttpServerResponse response) {
     try {
-      List<Map.Entry<String, String>> entries = _chat.listEmojis(request.getFilter() != null && !request.getFilter().isBlank() ? new Predicate<>() {
-        final Pattern pattern = Pattern.compile(request.getFilter().trim(), Pattern.CASE_INSENSITIVE);
-
-        @Override
-        public boolean test(String s) {
-          return pattern.matcher(s).find();
-        }
-      } : any -> true, 10);
+      List<Map.Entry<String, String>> entries = _chat.listEmojis(request.getFilter(), 10);
 
       List<ChatEmojiEntry> emojiEntries = new ArrayList<>(10);
       entries.forEach(entry -> emojiEntries.add(ChatEmojiEntry.builder()

@@ -69,7 +69,7 @@ public class Chat {
                 .handler(new ChatWriteHandler(chatManagerName, checkAuth));
         router.post("/chat/emojis")
                 .handler(BodyHandler.create())
-                .handler(new ChatListEmojisHandler(chatManager, checkAuth));
+                .handler(new ChatListEmojisHandler(chatManagerName, checkAuth));
         router.post("/chat/emoji")
                 .handler(BodyHandler.create())
                 .handler(new ChatSetEmojiHandler(chatManagerName, checkAuth));
